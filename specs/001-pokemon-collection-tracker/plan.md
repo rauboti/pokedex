@@ -34,10 +34,11 @@ No i18n, no charting — neither is required by this spec (research D4)
 dust tables in api resources, type chart in web lib (research D6)
 
 **Testing**: api — JUnit 5, MockMvc + `spring-security-test`, MockK,
-Testcontainers (real Postgres), WireMock for the game-data source (research D5);
-stat-math unit suite pins the SC-002 sample (≥10 Pokémon vs PvPoke/GO Hub) and
-the SC-007 moveset sample; web — Vitest + React Testing Library + MSW; type-chart
-unit tests pin the SC-006 sample
+Testcontainers (real Postgres); the game-data source is mocked at the interface
+level with MockK + committed fixture JSON, no HTTP-level mock (platform precedent,
+research D5 amendment 2026-07-20); stat-math unit suite pins the SC-002 sample
+(≥10 Pokémon vs PvPoke/GO Hub) and the SC-007 moveset sample; web — Vitest +
+React Testing Library + MSW; type-chart unit tests pin the SC-006 sample
 
 **Target Platform**: Docker Compose stack (platform monorepo); desktop + phone
 browser (registration happens mid-game on a phone)
@@ -55,7 +56,7 @@ stats and move data MUST be synced, never hardcoded (FR-011, constitution); no
 unofficial player-data APIs — manual entry only (FR-012); CPM/dust/type-chart
 vendored per constitution Game Data Constraints; impossible species/IV/CP inputs
 rejected server-side (SC-004); post-sync staleness rescan flags rebalanced
-Pokémon (FR-013/SC-005)
+Pokémon (FR-013/SC-005); catalog sync is admin-only (spec assumption 2026-07-20)
 
 **Scale/Scope**: Handful of platform users; low thousands of Pokémon per user;
 catalog ~1,500 species-forms, ~400 moves; 2 SPA pages (Collection, Pokémon
@@ -76,9 +77,11 @@ detail) + a registration dialog + auth shell; ~10 API endpoint groups
 | VI | Simplicity First | ✅ PASS | Client-side filter/sort (no query endpoints); one game-data source; four tables; one simple moveset heuristic (spec assumption); no i18n/charts/OCR; deviations justified in Complexity Tracking |
 | — | Game Data Constraints | ✅ PASS | No player-data APIs (manual entry, FR-012); base stats/moves synced with `synced_at` (FR-011, research D5); CPM + dust + type chart vendored (research D6) |
 
-**Post-design re-check (after Phase 1)**: ✅ PASS — four pokedex tables (`species`,
-`move`, `species_move` catalog + `caught_pokemon`), ten endpoints across four
-groups (auth, catalog, species, pokemon), all stat math in one server-side module,
+**Post-design re-check (after Phase 1, amended 2026-07-20 after /speckit-analyze
+remediation — nicknames dropped, by-id GET added, sync admin-only, MockK-only
+mocking)**: ✅ PASS — four pokedex tables (`species`, `move`, `species_move` catalog
++ `caught_pokemon`), twelve operations across four endpoint groups (auth, catalog,
+species, pokemon), all stat math in one server-side module,
 no server-side collection queries, no new infrastructure beyond the
 platform-standard three services. The game-data sync module, derivation preview
 endpoint, and vendored reference files are deliberate, documented deviations

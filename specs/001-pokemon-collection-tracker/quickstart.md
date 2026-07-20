@@ -84,11 +84,15 @@ file), including one CP-collision case and the CP/HP floor clamps.
    indicator; recommendation for the SC-007 sample species matches a trusted
    community list (pinned in api unit tests).
 3. A Pokémon with no recorded moves shows the unrecorded state, not a guess.
+4. With moves recorded, the matchup view's offensive coverage gains a
+   recorded-move-type section, visually distinct from the STAB-based coverage
+   (US5 scenario 5).
 
 ### Cross-cutting — staleness after resync (FR-013 / SC-005)
 
-1. With Pokémon registered, run `POST /api/catalog/sync` (or simulate a base-stat
-   change in an integration test — the automated path).
+1. With Pokémon registered, run `POST /api/catalog/sync` **as an admin** (sync is
+   admin-only; a `user`-role session gets 403), or simulate a base-stat change in an
+   integration test — the automated path.
 2. Any Pokémon whose stored CP+IVs no longer match its cached level appears with the
    stale badge; editing (re-deriving) clears it.
 

@@ -70,10 +70,20 @@ One sync module in the API (`gamedata/`) fetches the full Pokédex feed, normali
 (species incl. regional forms/megas, base stats, types; fast/charged moves with
 power/energy/duration; per-species move pools with legacy/Elite-TM markers), and
 upserts into Postgres with a `synced_at` timestamp. Sync runs automatically at startup
-when the catalog is empty and on demand via `POST /api/catalog/sync` (authenticated);
-`GET /api/catalog` exposes last-sync time and counts for the "catalog freshness" UI
-(spec edge case). The sync client is tested against WireMock fixtures captured from
-the real feed.
+when the catalog is empty and on demand via `POST /api/catalog/sync` — **admin-only**
+(maintainer decision 2026-07-20: roles are `user` and `admin`; only `admin` triggers a
+global sync); `GET /api/catalog` exposes last-sync time and counts for the "catalog
+freshness" UI (spec edge case).
+
+**Testing the sync (amended 2026-07-20 after maintainer review)**: platform precedent
+check showed **no sibling app uses an HTTP-level mock** (no WireMock/MockWebServer in
+hive, taskmaster, pulse, or avec's shipped code — all mock external HTTP clients at
+the interface level with MockK, avec's `HiveTokenClient` pattern). Pokedex follows
+suit and the maintainer's MockK preference: `GamedataClient` is an interface;
+`GamedataNormalizer` is pure and tested against committed fixture JSON captured from
+the real feed (covers deserialization without any HTTP server); `SyncService` tests
+stub the client with MockK; the live source is exercised manually at the Phase 2
+checkpoint. No new test dependency.
 
 **Rationale**: FR-011 forbids hardcoding base stats/moves. This source is
 purpose-built for exactly this data, needs no key, and being static is trivially

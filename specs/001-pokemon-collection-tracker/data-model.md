@@ -76,8 +76,7 @@ One registered Pokémon, owned by exactly one player. Table `caught_pokemon`
 |--------|------|-------------|-------|
 | `id` | `uuid` | PK, default `gen_random_uuid()` | |
 | `user_id` | `text` | NOT NULL, indexed | Hive JWT `sub`; every query is scoped by it (FR-014); never exposed in responses |
-| `species_id` | `text` | NOT NULL, FK → `species(id)` | Must exist in the synced catalog (unknown species unregistrable — spec edge case) |
-| `nickname` | `text` | nullable | |
+| `species_id` | `text` | NOT NULL, FK → `species(id)` | Must exist in the synced catalog (unknown species unregistrable — spec edge case). No nickname column — nicknames are out of scope (spec assumption 2026-07-20) |
 | `iv_atk` | `integer` | NOT NULL, `BETWEEN 0 AND 15` | |
 | `iv_def` | `integer` | NOT NULL, `BETWEEN 0 AND 15` | |
 | `iv_sta` | `integer` | NOT NULL, `BETWEEN 0 AND 15` | |

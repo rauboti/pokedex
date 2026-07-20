@@ -51,7 +51,7 @@ paths:
   /api/catalog/sync:
     post:
       tags: [catalog]
-      summary: Trigger a game-data sync (research D5); runs the staleness rescan (D9) on success
+      summary: Trigger a game-data sync (research D5); runs the staleness rescan (D9) on success. Admin-only.
       responses:
         "200":
           description: Sync completed
@@ -59,6 +59,11 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CatalogStatus" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: Caller lacks the admin role (sync is admin-only — spec assumption 2026-07-20)
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
         "502":
           description: Game-data source unreachable or malformed; catalog left unchanged
           content:
@@ -158,6 +163,19 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "422": { $ref: "#/components/responses/UnprocessableInput" }
   /api/pokemon/{id}:
+    get:
+      tags: [pokemon]
+      summary: One Pokémon by id (detail view refetch)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The Pokémon with its derived block
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Pokemon" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
     patch:
       tags: [pokemon]
       summary: Edit a Pokémon (FR-010; move recording per US5)
@@ -233,7 +251,7 @@ components:
         speciesCount: { type: integer }
         moveCount: { type: integer }
         syncedAt: { type: [string, "null"], format: date-time, description: "null until the first successful sync" }
-        stalePokemonCount: { type: integer, description: Collection rows flagged by the last rescan (FR-013) }
+        stalePokemonCount: { type: integer, description: "Caller-scoped: the authenticated user's own Pokémon currently flagged stale (FR-013); other users' rows are never counted" }
       required: [speciesCount, moveCount, syncedAt, stalePokemonCount]
 
     Species:
@@ -335,7 +353,6 @@ components:
       properties:
         id: { type: string, format: uuid }
         species: { $ref: "#/components/schemas/Species" }
-        nickname: { type: [string, "null"] }
         ivAtk: { type: integer }
         ivDef: { type: integer }
         ivSta: { type: integer }
@@ -361,7 +378,7 @@ components:
         stale: { type: boolean, description: Set by post-sync rescan (FR-013); prompts re-entry }
         caughtAt: { type: [string, "null"], format: date }
         createdAt: { type: string, format: date-time }
-      required: [id, species, nickname, ivAtk, ivDef, ivSta, cp, flags, moves, derived, stale, caughtAt, createdAt]
+      required: [id, species, ivAtk, ivDef, ivSta, cp, flags, moves, derived, stale, caughtAt, createdAt]
 
     PokemonInput:
       type: object
@@ -372,7 +389,6 @@ components:
         ivSta: { type: integer, minimum: 0, maximum: 15 }
         cp: { type: integer, minimum: 10 }
         level: { type: [number, "null"], description: Required only when derivation is ambiguous; must be a candidate }
-        nickname: { type: [string, "null"] }
         shiny: { type: boolean, default: false }
         shadow: { type: boolean, default: false }
         lucky: { type: boolean, default: false }
@@ -395,7 +411,6 @@ components:
         ivSta: { type: integer, minimum: 0, maximum: 15 }
         cp: { type: integer, minimum: 10 }
         level: { type: [number, "null"] }
-        nickname: { type: [string, "null"] }
         shiny: { type: boolean }
         shadow: { type: boolean }
         lucky: { type: boolean }
