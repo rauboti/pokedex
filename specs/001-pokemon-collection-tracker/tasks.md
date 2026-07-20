@@ -183,7 +183,7 @@ protects.
 
 ### Constitution reminders
 
-- A **fresh feature branch per implementation increment**, created **before any code** (e.g. `001-pokemon-collection-tracker-us1`); PR-only into `main`
+- A **fresh feature branch per implementation increment — an increment = ONE task**, created **before any code** (e.g. `001-pokemon-collection-tracker-setup` for T001, `-web-scaffold` for T002); NEVER reuse the previous task's branch (constitution v1.0.1); PR-only into `main`
 - **Every task is a green-to-green step**: tests written first *inside* the task, observed red, implemented to green — the suite passes at every task boundary, so any task can be a merge point for small green commits
 - All work left **uncommitted** on the branch — the maintainer reviews and commits
 - T004 touches `../docker-compose.yml` and T006 touches `../hive` — cross-repo/platform files, explicit maintainer approval
