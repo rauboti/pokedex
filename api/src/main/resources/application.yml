@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: pokedex
+  datasource:
+    # Defaults mirror docker-compose.yml / .env; overridden via env in containers.
+    # Standalone dev connects to pokedex-db's published host port (5436).
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5436/pokedex}
+    username: ${POSTGRES_USER:pokedex}
+    password: ${POSTGRES_PASSWORD:pokedex_local_dev}
+  flyway:
+    # Runs on startup; default location classpath:db/migration. Forward-only.
+    # V1__create_catalog.sql + V2__create_caught_pokemon.sql (T005).
+    enabled: true
+  mvc:
+    problemdetails:
+      # Render Spring's built-in MVC exceptions (400, 404, 405, …) as RFC-7807
+      # problem+json, uniform with the app's own handlers (T007).
+      enabled: true
+
+# Consumer integration with Hive (research D1). These are config *keys* only;
+# the JWT decoder (resource server) and the OAuth login client are wired from them
+# in T008 and T009.
+pokedex:
+  hive:
+    # Browser-reachable Hive base: the authorize URL is derived from it, and it is the expected
+    # token `iss` (Hive stamps its external URL).
+    external-url: ${HIVE_EXTERNAL_URL:http://localhost:5000}
+    # Container-reachable Hive base: the token + JWKS URLs are derived from it (server-side calls).
+    # In the shared Docker stack this is Hive's service name; standalone it can match external-url.
+    internal-url: ${HIVE_INTERNAL_URL:http://localhost:5000}
+    client-id: ${HIVE_CLIENT_ID:pokedex}
+    client-secret: ${HIVE_CLIENT_SECRET:}
+  gamedata:
+    # Community Game Master source for species/move data (research D5) — fetched
+    # server-side by the sync module (T010). Tests stub the client interface with
+    # MockK; this base URL only matters for live syncs.
+    base-url: ${GAMEDATA_BASE_URL:https://pokemon-go-api.github.io/pokemon-go-api}
+  cors:
+    # Comma-separated; consumed by the CORS configuration (T008).
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3040}
+  web:
+    # The public web origin. The BFF redirects the browser here after login AND derives its OAuth
+    # redirect URI from it (`{base-url}/auth/callback`), so this single value defines the callback.
+    # Dev default is the Vite origin; Docker sets it to the nginx origin (see docker-compose.yml).
+    base-url: ${WEB_BASE_URL:http://localhost:5173}
+
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        name: POKEDEX_SESSION
+        # BFF session hardening (research D1): the cookie carries the only client-side auth handle,
+        # so it is HttpOnly (no JS access) and SameSite=Lax (CSRF-resistant while surviving the
+        # top-level OAuth redirect back from Hive). Secure is off by default for plain-HTTP local
+        # dev and set to true in production (SESSION_COOKIE_SECURE=true) where the app is served
+        # over HTTPS.
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Actuator exposes only its health probe (used by the compose healthcheck).
+        include: health
+  endpoint:
+    health:
+      access: read-only

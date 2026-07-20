@@ -8,6 +8,13 @@
 
 **Input**: User description: "A tracking application for Pokémon GO: register caught Pokémon (species, IVs, observed CP) and view their derived level, HP, effective stats, types, and flags (shiny/shadow/lucky/purified). Full details in POKEDEX_PROJECT_BRIEF.md — includes collection view with filter/sort, perfect-IV (hundo) tracking with level projections, and stretch goals for PvP stat product/league ranks and badge tracking."
 
+## Clarifications
+
+### Session 2026-07-20
+
+- Q: Should mega/temporary battle forms be registrable in US1's species search? → A: Sync them into the catalog but exclude them from registration search (a `registrable` flag on species; search filters on it).
+- Q: Is collection data export (JSON/CSV) in scope for v1? → A: Out of scope for v1 — recorded as an explicit future item.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Register a caught Pokémon (Priority: P1)
@@ -17,8 +24,8 @@ search for the species (including regional forms, megas, and other variants), en
 three IV values (attack, defense, stamina, each 0–15) as appraised in-game, and the
 observed CP. The app derives the Pokémon's level from these inputs and immediately shows
 level, HP, effective attack/defense/stamina, IV percentage, and the species' type(s).
-The player can optionally add a nickname, catch date, and flags: shiny, shadow, lucky,
-purified, and Best Buddy.
+The player can optionally add a catch date and flags: shiny, shadow, lucky, purified,
+and Best Buddy.
 
 **Why this priority**: This is the core value of the product — turning the three numbers
 the game shows you into the full derived picture. Nothing else in the app works without
@@ -53,10 +60,10 @@ calculators for the same inputs.
 ### User Story 2 - Browse and filter the collection (Priority: P2)
 
 The player opens their collection and sees all registered Pokémon with their key values
-(species, nickname, level, CP, IV%, types, flags). They can filter by species, type,
+(species, level, CP, IV%, types, flags). They can filter by species, type,
 and flags (shiny/shadow/lucky/purified), and sort by IV%, CP, level, catch date, or
-name — for example "show my shiny Pokémon sorted by IV%" or "all Dragon types above
-90% IV".
+species name — for example "show my shiny Pokémon sorted by IV%" or "all Dragon types
+above 90% IV".
 
 **Why this priority**: Once more than a handful of Pokémon are registered, retrieval and
 comparison is what makes this a tracker rather than a one-shot calculator.
@@ -68,8 +75,8 @@ expected order.
 **Acceptance Scenarios**:
 
 1. **Given** a collection with multiple Pokémon, **When** the player opens the
-   collection view, **Then** all registered Pokémon are listed with species, level, CP,
-   IV%, types, and flags visible.
+   collection view, **Then** all registered Pokémon are listed with species name (and
+   form), level, CP, IV%, types, and flags visible.
 2. **Given** a filter on a flag (e.g. shiny), **When** applied, **Then** only Pokémon
    with that flag are shown and the active filter is visible.
 3. **Given** a sort on IV% descending, **When** applied, **Then** Pokémon are ordered
@@ -159,6 +166,9 @@ moveset for a sample of species, consistent with trusted community resources.
    by normal means.
 4. **Given** a Pokémon with no moves recorded, **When** viewing its details, **Then**
    the moveset area shows an unrecorded state rather than a guess.
+5. **Given** a Pokémon with recorded moves, **When** viewing its type matchups (US4),
+   **Then** offensive coverage additionally reflects the types of its recorded moves,
+   visually distinguished from the species-type (STAB) coverage.
 
 ---
 
@@ -204,6 +214,9 @@ and distance-to-next-tier match the badge's published thresholds.
 - **New species/forms**: species released after the last data sync are missing from the
   catalog — the player sees when the catalog was last refreshed, and registration of an
   unknown species is not possible until the catalog is updated.
+- **Mega/temporary forms**: present in the synced catalog (own base stats) but not
+  catchable — excluded from registration search via the species' registrable flag;
+  registering one is impossible by construction (clarification 2026-07-20).
 - **Move pool changes**: a data refresh can rebalance moves or remove a recorded move
   from a species' pool — recorded moves are kept (the Pokémon still knows them in-game)
   but the recommended moveset reflects the refreshed data.
@@ -215,22 +228,25 @@ and distance-to-next-tier match the badge's published thresholds.
 ### Functional Requirements
 
 - **FR-001**: System MUST let players register a caught Pokémon by selecting a species
-  (searchable by name, including forms and variants) and entering IV values for attack,
-  defense, and stamina (each an integer 0–15) and the observed CP.
+  (searchable by name, including catchable forms and variants) and entering IV values
+  for attack, defense, and stamina (each an integer 0–15) and the observed CP.
+  Mega/temporary battle forms are synced into the catalog but MUST NOT be offered in
+  registration search (clarification 2026-07-20).
 - **FR-002**: System MUST derive the Pokémon's level (1–51 in half-level steps) from
   species base stats, IVs, and observed CP, and from it compute HP, effective
   attack/defense/stamina, and IV percentage.
 - **FR-003**: System MUST handle ambiguous CP→level results by presenting all matching
   levels with a disambiguation hint, and MUST reject species/IV/CP combinations that
   match no level.
-- **FR-004**: System MUST support optional attributes per Pokémon: nickname, catch
-  date, and the flags shiny, shadow, lucky, purified, and Best Buddy.
+- **FR-004**: System MUST support optional attributes per Pokémon: catch date and the
+  flags shiny, shadow, lucky, purified, and Best Buddy. Nicknames are not supported
+  for the time being (maintainer decision 2026-07-20).
 - **FR-005**: System MUST persist registered Pokémon so the collection survives
   restarts and is available on the player's next visit.
-- **FR-006**: System MUST provide a collection view showing species, nickname, level,
-  CP, IV%, types, and flags for every registered Pokémon.
+- **FR-006**: System MUST provide a collection view showing species name (and form),
+  level, CP, IV%, types, and flags for every registered Pokémon.
 - **FR-007**: Users MUST be able to filter the collection by species, type, and each
-  flag, and sort by IV%, CP, level, catch date, and name.
+  flag, and sort by IV%, CP, level, catch date, and species name.
 - **FR-008**: System MUST visually highlight perfect-IV (15/15/15) Pokémon in the
   collection.
 - **FR-009**: System MUST show projected CP, HP, and effective stats for any registered
@@ -250,7 +266,9 @@ and distance-to-next-tier match the badge's published thresholds.
 - **FR-015**: System MUST show, per registered Pokémon, its defensive type
   effectiveness (weaknesses, resistances, immunities-in-effect) derived from its type
   or combined dual-type, and the types its own attack type(s) hit super-effectively,
-  per the canonical type-effectiveness chart.
+  per the canonical type-effectiveness chart. When moves are recorded (FR-016),
+  offensive coverage MUST additionally reflect the recorded moves' types,
+  distinguished from the species-type (STAB) coverage.
 - **FR-016**: System MUST let players record their Pokémon's fast and charged moves,
   restricted to the species' move pool from the synced game data; moves not currently
   obtainable by normal means (legacy/Elite TM) MUST be marked as such.
@@ -266,11 +284,12 @@ spec.
 ### Key Entities
 
 - **Species**: a catalog entry from the synced game data — dex number, name, form
-  discriminator, base attack/defense/stamina, type(s), and last-synced timestamp. Read
-  mostly; refreshed by sync, never hand-edited.
+  discriminator, base attack/defense/stamina, type(s), a registrable flag (false for
+  mega/temporary battle forms), and last-synced timestamp. Read mostly; refreshed by
+  sync, never hand-edited.
 - **Caught Pokémon**: a player-owned record — reference to a Species, IVs (0–15 ×3),
-  observed CP, derived level (cached), nickname, catch date, flags (shiny, shadow,
-  lucky, purified, Best Buddy), owner, created timestamp.
+  observed CP, derived level (cached), catch date, flags (shiny, shadow, lucky,
+  purified, Best Buddy), owner, created timestamp.
 - **CP multiplier table**: the fixed per-level multiplier lookup (levels 1–51 in
   half-steps) that all derivations depend on; stable reference data.
 - **Type effectiveness chart**: the canonical attack-type vs defend-type multiplier
@@ -323,10 +342,17 @@ spec.
 - The remaining stretch story (US6 badges) is in scope for specification but may be
   deferred at planning; earlier stories deliver full value without it.
 - Offensive effectiveness in US4 is based on the Pokémon's own type(s) (STAB
-  perspective); move-type-based offense arrives with recorded moves in US5.
+  perspective); US5 explicitly extends it with recorded-move-type coverage (US5
+  scenario 5, FR-015).
+- Nicknames are out of scope for now — Pokémon are identified by species name (and
+  form); "sort by name" means species name. Revisitable in a later spec.
+- Catalog sync is admin-only: the roles are `user` and `admin`, and only `admin` may
+  trigger a game-data sync (maintainer decision 2026-07-20).
 - Species catalog freshness is best-effort: a scheduled or on-demand refresh is
   sufficient; real-time game parity is not required.
 - Data is retained indefinitely until the player deletes it; collections are expected
   to reach low thousands of Pokémon, not millions.
+- Collection data export (JSON/CSV) is out of scope for v1 (clarification
+  2026-07-20) — a candidate for a later spec, alongside PvP relevance and OCR import.
 - Purification is handled as an edit to the existing record (new IVs/CP, purified flag)
   rather than automatic IV adjustment.
