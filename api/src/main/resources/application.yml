@@ -3,8 +3,8 @@ spring:
     name: pokedex
   datasource:
     # Defaults mirror docker-compose.yml / .env; overridden via env in containers.
-    # Standalone dev connects to pokedex-db's published host port (5436).
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5436/pokedex}
+    # Standalone dev connects to pokedex-db's published host port (5437).
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5437/pokedex}
     username: ${POSTGRES_USER:pokedex}
     password: ${POSTGRES_PASSWORD:pokedex_local_dev}
   flyway:
@@ -37,7 +37,7 @@ pokedex:
     base-url: ${GAMEDATA_BASE_URL:https://pokemon-go-api.github.io/pokemon-go-api}
   cors:
     # Comma-separated; consumed by the CORS configuration (T008).
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3040}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3050}
   web:
     # The public web origin. The BFF redirects the browser here after login AND derives its OAuth
     # redirect URI from it (`{base-url}/auth/callback`), so this single value defines the callback.

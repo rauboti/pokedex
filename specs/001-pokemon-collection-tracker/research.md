@@ -24,7 +24,7 @@ rejected in pulse D1 for security.
 ## D2. Hive client registration for pokedex (owned cross-repo change)
 
 **Decision**: Register a `pokedex` OAuth client in hive (client id `pokedex`, dev
-secret `pokedex-local-dev`, redirect `http://localhost:3040/auth/callback` plus the
+secret `pokedex-local-dev`, redirect `http://localhost:3050/auth/callback` plus the
 API-origin dev redirect), mirroring avec D2 minus the locale write-through — pokedex
 is single-language and needs no hive user-attribute changes.
 
@@ -199,13 +199,13 @@ scale, rejected in avec D9 for the same reason.
 ## D11. Deployment & platform integration (adopted from pulse D8 / avec D10 + constitution)
 
 **Decision**: `pokedex/docker-compose.yml` defines `pokedex-db` (postgres:17-alpine,
-host 5436), `pokedex-api` (host 5040), `pokedex-web` (nginx, host 3040), healthcheck-
+host 5437), `pokedex-api` (host 5050), `pokedex-web` (nginx, host 3050), healthcheck-
 gated, with the `RAUBOTI_PACKAGE_TOKEN` BuildKit secret for the `@rauboti/ui`
 registry at web build time. Platform root gets a `pokedex.env` (stack-facing HIVE_*
 URLs) and an `include` entry in `platform/docker-compose.yml`. `.env.example`
 documents app-local overrides.
 
-**Rationale**: Constitution Platform Integration Constraints, verbatim; 3040/5040/5436
+**Rationale**: Constitution Platform Integration Constraints, verbatim; 3050/5050/5437
 is the next free band.
 
 **Alternatives considered**: none — this is the constitutionally mandated shape.
