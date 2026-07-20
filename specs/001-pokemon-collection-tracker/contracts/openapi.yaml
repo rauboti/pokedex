@@ -10,8 +10,8 @@ info:
     not part of this JSON contract.
   version: 0.1.0
 servers:
-  - url: http://localhost:5040
-    description: Local dev (direct); the SPA reaches it same-origin via nginx on :3040
+  - url: http://localhost:5050
+    description: Local dev (direct); the SPA reaches it same-origin via nginx on :3050
 tags:
   - name: auth
   - name: catalog

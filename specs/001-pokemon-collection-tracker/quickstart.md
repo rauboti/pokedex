@@ -20,7 +20,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-- Web: http://localhost:3040 · API: http://localhost:5040 · DB: localhost:5436
+- Web: http://localhost:3050 · API: http://localhost:5050 · DB: localhost:5437
 - In the combined platform stack instead: `docker compose up` from `platform/`
   (pokedex included via `pokedex.env` + `include` entry, research D11)
 - First API start with an empty catalog triggers a game-data sync (research D5);
@@ -44,7 +44,7 @@ file), including one CP-collision case and the CP/HP floor clamps.
 
 ### US1 — Register a caught Pokémon (P1)
 
-1. Sign in at http://localhost:3040 (hive redirect).
+1. Sign in at http://localhost:3050 (hive redirect).
 2. Register: search a species (try a form, e.g. "Rattata" → Alolan entry), enter
    IVs 15/15/15 and a valid CP → the form previews level, HP, stats, IV% 100%
    (via `POST /api/derivation`), and saving lists it with types visible.

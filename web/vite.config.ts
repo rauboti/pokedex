@@ -11,18 +11,18 @@ export default defineConfig({
     // Vite's default dev port (5173); honour PORT when tooling assigns one.
     port: process.env.PORT ? Number(process.env.PORT) : 5173,
     // Dev proxy: relative `/api` (data) and `/auth` (BFF OAuth login/callback) requests
-    // are forwarded to the Pokedex api on :5040 (its published Docker port — run it via
+    // are forwarded to the Pokedex api on :5050 (its published Docker port — run it via
     // `docker compose up pokedex-db pokedex-api`). Override with VITE_API_ORIGIN if you run
     // the api elsewhere. Once MSW is added (T011), the worker intercepts `/api` before the
     // network, making it inert for data; `/auth` is a full-page navigation, so it always
     // hits this proxy.
     proxy: {
       '/api': {
-        target: process.env.VITE_API_ORIGIN ?? 'http://localhost:5040',
+        target: process.env.VITE_API_ORIGIN ?? 'http://localhost:5050',
         changeOrigin: true,
       },
       '/auth': {
-        target: process.env.VITE_API_ORIGIN ?? 'http://localhost:5040',
+        target: process.env.VITE_API_ORIGIN ?? 'http://localhost:5050',
         changeOrigin: true,
       },
     },
