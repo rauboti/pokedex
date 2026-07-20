@@ -1,0 +1,407 @@
+openapi: 3.1.0
+info:
+  title: pokedex-api
+  description: >
+    BFF for the Pokémon GO collection tracker. Browser authenticates via hive OAuth
+    brokered by this API (session cookie; tokens never reach the browser). All
+    /api/pokemon data is scoped to the authenticated user. Errors use RFC 7807
+    (application/problem+json). The interactive login flow (GET /auth/login →
+    hive → GET /auth/callback → redirect to WEB_BASE_URL) is session plumbing,
+    not part of this JSON contract.
+  version: 0.1.0
+servers:
+  - url: http://localhost:5040
+    description: Local dev (direct); the SPA reaches it same-origin via nginx on :3040
+tags:
+  - name: auth
+  - name: catalog
+  - name: species
+  - name: pokemon
+
+paths:
+  /api/auth/me:
+    get:
+      tags: [auth]
+      summary: Current session
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      summary: End the session
+      responses:
+        "204": { description: Session ended }
+
+  /api/catalog:
+    get:
+      tags: [catalog]
+      summary: Catalog sync status (species/move counts, last sync time)
+      responses:
+        "200":
+          description: Status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CatalogStatus" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /api/catalog/sync:
+    post:
+      tags: [catalog]
+      summary: Trigger a game-data sync (research D5); runs the staleness rescan (D9) on success
+      responses:
+        "200":
+          description: Sync completed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CatalogStatus" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "502":
+          description: Game-data source unreachable or malformed; catalog left unchanged
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /api/species:
+    get:
+      tags: [species]
+      summary: Search the species catalog
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+          description: Case-insensitive name substring
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 50 }
+      responses:
+        "200":
+          description: Matching species (name match, including forms)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Species" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /api/species/{id}/moves:
+    get:
+      tags: [species]
+      summary: Move pool + recommended moveset for a species
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Pool with legacy markers (US5) and the sync-computed recommendation (D8)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SpeciesMoves" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/derivation:
+    post:
+      tags: [pokemon]
+      summary: Stateless CP→level derivation preview (US1; research D7)
+      description: >
+        Returns every level matching (species, IVs, CP) with dust-cost hints for
+        disambiguation. Zero candidates means the combination is impossible (the
+        registration form blocks save; POST /api/pokemon would answer 422).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DerivationRequest" }
+      responses:
+        "200":
+          description: Candidate levels (possibly empty)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DerivationResult" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/pokemon:
+    get:
+      tags: [pokemon]
+      summary: The caller's full collection (filter/sort happens client-side, D10)
+      responses:
+        "200":
+          description: All registered Pokémon with derived values
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Pokemon" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [pokemon]
+      summary: Register a Pokémon (US1)
+      description: >
+        The API re-runs the solver. If (species, IVs, CP) is ambiguous, `level` is
+        required and must be one of the candidates; if unambiguous, `level` may be
+        omitted. No match → 422 (FR-003, SC-004).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PokemonInput" }
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Pokemon" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/UnprocessableInput" }
+  /api/pokemon/{id}:
+    patch:
+      tags: [pokemon]
+      summary: Edit a Pokémon (FR-010; move recording per US5)
+      description: >
+        Partial update. Changing species/IVs/CP re-derives level (same candidate
+        rules as create) and clears `stale`. Moves are validated against the
+        species pool and fast/charged slots.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PokemonPatch" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Pokemon" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/UnprocessableInput" }
+    delete:
+      tags: [pokemon]
+      summary: Delete a Pokémon (FR-010)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  responses:
+    Unauthorized:
+      description: No valid session
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    NotFound:
+      description: Unknown id (or not owned by the caller — indistinguishable by design)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    UnprocessableInput:
+      description: Impossible species/IV/CP combination, level not among candidates, or move outside the species pool
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+
+  schemas:
+    Problem:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+      required: [title, status]
+
+    Me:
+      type: object
+      properties:
+        sub: { type: string }
+        name: { type: string }
+        roles: { type: array, items: { type: string } }
+      required: [sub, name]
+
+    CatalogStatus:
+      type: object
+      properties:
+        speciesCount: { type: integer }
+        moveCount: { type: integer }
+        syncedAt: { type: [string, "null"], format: date-time, description: "null until the first successful sync" }
+        stalePokemonCount: { type: integer, description: Collection rows flagged by the last rescan (FR-013) }
+      required: [speciesCount, moveCount, syncedAt, stalePokemonCount]
+
+    Species:
+      type: object
+      properties:
+        id: { type: string }
+        dexNr: { type: integer }
+        name: { type: string }
+        form: { type: [string, "null"] }
+        types: { type: array, items: { type: string }, minItems: 1, maxItems: 2 }
+        baseAtk: { type: integer }
+        baseDef: { type: integer }
+        baseSta: { type: integer }
+        syncedAt: { type: string, format: date-time }
+      required: [id, dexNr, name, form, types, baseAtk, baseDef, baseSta, syncedAt]
+
+    Move:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        type: { type: string }
+        fast: { type: boolean }
+        legacy: { type: boolean, description: Present on pool entries; not currently obtainable by normal means }
+      required: [id, name, type, fast]
+
+    SpeciesMoves:
+      type: object
+      properties:
+        speciesId: { type: string }
+        fastMoves: { type: array, items: { $ref: "#/components/schemas/Move" } }
+        chargedMoves: { type: array, items: { $ref: "#/components/schemas/Move" } }
+        recommended:
+          type: [object, "null"]
+          description: Sync-computed optimal pairing (research D8); null when the pool is unknown
+          properties:
+            fastMoveId: { type: string }
+            chargedMoveId: { type: string }
+          required: [fastMoveId, chargedMoveId]
+      required: [speciesId, fastMoves, chargedMoves, recommended]
+
+    DerivationRequest:
+      type: object
+      properties:
+        speciesId: { type: string }
+        ivAtk: { type: integer, minimum: 0, maximum: 15 }
+        ivDef: { type: integer, minimum: 0, maximum: 15 }
+        ivSta: { type: integer, minimum: 0, maximum: 15 }
+        cp: { type: integer, minimum: 10 }
+      required: [speciesId, ivAtk, ivDef, ivSta, cp]
+
+    DerivationResult:
+      type: object
+      properties:
+        candidates:
+          type: array
+          description: Empty = impossible combination (SC-004)
+          items:
+            type: object
+            properties:
+              level: { type: number }
+              hp: { type: integer }
+              attack: { type: number }
+              defense: { type: number }
+              stamina: { type: number }
+              dustCost: { type: integer, description: Power-up dust at this level (disambiguation hint, US1 scenario 4) }
+            required: [level, hp, attack, defense, stamina, dustCost]
+      required: [candidates]
+
+    Derived:
+      type: object
+      description: Server-computed block (research D7); the SPA does no stat math
+      properties:
+        level: { type: number }
+        hp: { type: integer }
+        attack: { type: number }
+        defense: { type: number }
+        stamina: { type: number }
+        ivPercent: { type: number, description: (ivAtk+ivDef+ivSta)/45 × 100, one decimal }
+        perfect: { type: boolean, description: 15/15/15 (FR-008) }
+        projections:
+          type: array
+          description: Level 40 and 50 always; Best Buddy (+1 from current level) when flagged (FR-009)
+          items:
+            type: object
+            properties:
+              label: { type: string, enum: [L40, L50, BEST_BUDDY] }
+              level: { type: number }
+              cp: { type: integer }
+              hp: { type: integer }
+              attack: { type: number }
+              defense: { type: number }
+              stamina: { type: number }
+            required: [label, level, cp, hp, attack, defense, stamina]
+      required: [level, hp, attack, defense, stamina, ivPercent, perfect, projections]
+
+    Pokemon:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        species: { $ref: "#/components/schemas/Species" }
+        nickname: { type: [string, "null"] }
+        ivAtk: { type: integer }
+        ivDef: { type: integer }
+        ivSta: { type: integer }
+        cp: { type: integer }
+        flags:
+          type: object
+          properties:
+            shiny: { type: boolean }
+            shadow: { type: boolean }
+            lucky: { type: boolean }
+            purified: { type: boolean }
+            bestBuddy: { type: boolean }
+          required: [shiny, shadow, lucky, purified, bestBuddy]
+        moves:
+          type: object
+          description: Recorded moves (US5); nulls = unrecorded (US5 scenario 4)
+          properties:
+            fast: { oneOf: [{ $ref: "#/components/schemas/Move" }, { type: "null" }] }
+            charged1: { oneOf: [{ $ref: "#/components/schemas/Move" }, { type: "null" }] }
+            charged2: { oneOf: [{ $ref: "#/components/schemas/Move" }, { type: "null" }] }
+          required: [fast, charged1, charged2]
+        derived: { $ref: "#/components/schemas/Derived" }
+        stale: { type: boolean, description: Set by post-sync rescan (FR-013); prompts re-entry }
+        caughtAt: { type: [string, "null"], format: date }
+        createdAt: { type: string, format: date-time }
+      required: [id, species, nickname, ivAtk, ivDef, ivSta, cp, flags, moves, derived, stale, caughtAt, createdAt]
+
+    PokemonInput:
+      type: object
+      properties:
+        speciesId: { type: string }
+        ivAtk: { type: integer, minimum: 0, maximum: 15 }
+        ivDef: { type: integer, minimum: 0, maximum: 15 }
+        ivSta: { type: integer, minimum: 0, maximum: 15 }
+        cp: { type: integer, minimum: 10 }
+        level: { type: [number, "null"], description: Required only when derivation is ambiguous; must be a candidate }
+        nickname: { type: [string, "null"] }
+        shiny: { type: boolean, default: false }
+        shadow: { type: boolean, default: false }
+        lucky: { type: boolean, default: false }
+        purified: { type: boolean, default: false }
+        bestBuddy: { type: boolean, default: false }
+        fastMoveId: { type: [string, "null"] }
+        chargedMove1Id: { type: [string, "null"] }
+        chargedMove2Id: { type: [string, "null"] }
+        caughtAt: { type: [string, "null"], format: date }
+      required: [speciesId, ivAtk, ivDef, ivSta, cp]
+
+    PokemonPatch:
+      type: object
+      description: Any subset of PokemonInput's fields; omitted fields are unchanged
+      minProperties: 1
+      properties:
+        speciesId: { type: string }
+        ivAtk: { type: integer, minimum: 0, maximum: 15 }
+        ivDef: { type: integer, minimum: 0, maximum: 15 }
+        ivSta: { type: integer, minimum: 0, maximum: 15 }
+        cp: { type: integer, minimum: 10 }
+        level: { type: [number, "null"] }
+        nickname: { type: [string, "null"] }
+        shiny: { type: boolean }
+        shadow: { type: boolean }
+        lucky: { type: boolean }
+        purified: { type: boolean }
+        bestBuddy: { type: boolean }
+        fastMoveId: { type: [string, "null"] }
+        chargedMove1Id: { type: [string, "null"] }
+        chargedMove2Id: { type: [string, "null"] }
+        caughtAt: { type: [string, "null"], format: date }
