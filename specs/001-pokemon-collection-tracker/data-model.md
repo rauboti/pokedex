@@ -26,6 +26,7 @@ One species+form from the synced game data. Table `species`
 | `base_sta` | `integer` | NOT NULL, `> 0` | |
 | `type_1` | `text` | NOT NULL | One of the 18 canonical types |
 | `type_2` | `text` | nullable | Second type for dual-types |
+| `registrable` | `boolean` | NOT NULL, default `true` | `false` for mega/temporary battle forms — set by the sync normalizer; registration search filters on it (clarification 2026-07-20) |
 | `recommended_fast_move_id` | `text` | nullable, FK → `move(id)` | Computed at sync (research D8); NULL when the pool is empty/unknown |
 | `recommended_charged_move_id` | `text` | nullable, FK → `move(id)` | Computed at sync (research D8) |
 | `synced_at` | `timestamptz` | NOT NULL | Last time this row was written by a sync (FR-011) |
@@ -100,6 +101,8 @@ One registered Pokémon, owned by exactly one player. Table `caught_pokemon`
 **Deletion** (FR-010): hard delete, no dependents.
 
 **Write-path invariants** (service layer, tested):
+0. The species must be `registrable` — mega/temporary forms are rejected on create
+   and on species change (422), not just hidden from search (clarification 2026-07-20).
 1. Solver must confirm `(species, IVs, CP) → level`; ambiguous → client must send one
    of the candidate levels; no match → 422 (FR-003, SC-004).
 2. Recorded moves must be fast/charged-correct (`is_fast`) and in the species pool at

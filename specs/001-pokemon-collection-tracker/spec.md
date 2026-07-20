@@ -8,6 +8,13 @@
 
 **Input**: User description: "A tracking application for Pokémon GO: register caught Pokémon (species, IVs, observed CP) and view their derived level, HP, effective stats, types, and flags (shiny/shadow/lucky/purified). Full details in POKEDEX_PROJECT_BRIEF.md — includes collection view with filter/sort, perfect-IV (hundo) tracking with level projections, and stretch goals for PvP stat product/league ranks and badge tracking."
 
+## Clarifications
+
+### Session 2026-07-20
+
+- Q: Should mega/temporary battle forms be registrable in US1's species search? → A: Sync them into the catalog but exclude them from registration search (a `registrable` flag on species; search filters on it).
+- Q: Is collection data export (JSON/CSV) in scope for v1? → A: Out of scope for v1 — recorded as an explicit future item.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Register a caught Pokémon (Priority: P1)
@@ -207,6 +214,9 @@ and distance-to-next-tier match the badge's published thresholds.
 - **New species/forms**: species released after the last data sync are missing from the
   catalog — the player sees when the catalog was last refreshed, and registration of an
   unknown species is not possible until the catalog is updated.
+- **Mega/temporary forms**: present in the synced catalog (own base stats) but not
+  catchable — excluded from registration search via the species' registrable flag;
+  registering one is impossible by construction (clarification 2026-07-20).
 - **Move pool changes**: a data refresh can rebalance moves or remove a recorded move
   from a species' pool — recorded moves are kept (the Pokémon still knows them in-game)
   but the recommended moveset reflects the refreshed data.
@@ -218,8 +228,10 @@ and distance-to-next-tier match the badge's published thresholds.
 ### Functional Requirements
 
 - **FR-001**: System MUST let players register a caught Pokémon by selecting a species
-  (searchable by name, including forms and variants) and entering IV values for attack,
-  defense, and stamina (each an integer 0–15) and the observed CP.
+  (searchable by name, including catchable forms and variants) and entering IV values
+  for attack, defense, and stamina (each an integer 0–15) and the observed CP.
+  Mega/temporary battle forms are synced into the catalog but MUST NOT be offered in
+  registration search (clarification 2026-07-20).
 - **FR-002**: System MUST derive the Pokémon's level (1–51 in half-level steps) from
   species base stats, IVs, and observed CP, and from it compute HP, effective
   attack/defense/stamina, and IV percentage.
@@ -272,8 +284,9 @@ spec.
 ### Key Entities
 
 - **Species**: a catalog entry from the synced game data — dex number, name, form
-  discriminator, base attack/defense/stamina, type(s), and last-synced timestamp. Read
-  mostly; refreshed by sync, never hand-edited.
+  discriminator, base attack/defense/stamina, type(s), a registrable flag (false for
+  mega/temporary battle forms), and last-synced timestamp. Read mostly; refreshed by
+  sync, never hand-edited.
 - **Caught Pokémon**: a player-owned record — reference to a Species, IVs (0–15 ×3),
   observed CP, derived level (cached), catch date, flags (shiny, shadow, lucky,
   purified, Best Buddy), owner, created timestamp.
@@ -339,5 +352,7 @@ spec.
   sufficient; real-time game parity is not required.
 - Data is retained indefinitely until the player deletes it; collections are expected
   to reach low thousands of Pokémon, not millions.
+- Collection data export (JSON/CSV) is out of scope for v1 (clarification
+  2026-07-20) — a candidate for a later spec, alongside PvP relevance and OCR import.
 - Purification is handled as an edit to the existing record (new IVs/CP, purified flag)
   rather than automatic IV adjustment.

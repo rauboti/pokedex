@@ -85,7 +85,7 @@ paths:
           schema: { type: integer, default: 20, maximum: 50 }
       responses:
         "200":
-          description: Matching species (name match, including forms)
+          description: Matching registrable species (name match, including catchable forms; mega/temporary battle forms are excluded — clarification 2026-07-20)
           content:
             application/json:
               schema:
