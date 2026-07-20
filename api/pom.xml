@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>no.rauboti</groupId>
+    <artifactId>pokedex-api</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>pokedex-api</name>
+    <description>Pokedex — Pokémon GO collection tracker (backend)</description>
+
+    <properties>
+        <java.version>25</java.version>
+        <!-- Kotlin version is left to Spring Boot's BOM (4.1.0), the version the
+             framework is validated against. Don't override it ahead of Boot. -->
+        <mockk.version>1.14.11</mockk.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!-- Jackson 3 Kotlin module (Boot 4 uses Jackson 3 / tools.jackson): lets
+             @RequestBody deserialize Kotlin data classes (constructor params,
+             defaults, nullability). -->
+        <dependency>
+            <groupId>tools.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+
+        <!-- Auth (BFF): as a *consumer* of Hive, Pokedex is an OAuth2 client. The
+             oauth2-client starter drives the Authorization-Code + PKCE login dance
+             against Hive; the resource-server starter validates the resulting
+             Hive-issued RS256 JWT via JWKS on API requests (research D1). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
+        <!-- Persistence: Postgres via Flyway. Boot 4 modularized auto-config, so
+             Flyway only auto-runs when its dedicated starter is present (a bare
+             flyway-core dependency is no longer enough). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <!-- Flyway 10+ splits DB support into modules; Postgres needs this. -->
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Baseline test support. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Authenticated MockMvc principals for the session API contract tests:
+             `jwt()` post-processor injects a SecurityContext the SessionTokenAuthenticationFilter
+             leaves intact (it only populates an empty context, never clears one). -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- MockMvc slice support (Boot 4 split this out of starter-test). Used by the
+             full-context web tests, e.g. `/api/auth/me` returns 401 unauthenticated. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- MockK — the platform's Kotlin mocking library, for unit tests with
+             collaborators AND for stubbing external HTTP clients at the interface
+             (no HTTP-level mock in the platform — research D5). -->
+        <dependency>
+            <groupId>io.mockk</groupId>
+            <artifactId>mockk-jvm</artifactId>
+            <version>${mockk.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Integration tests run against a real Postgres (Testcontainers 2.x, per
+             research D3 — Boot manages the version). Wired to Spring via
+             @ServiceConnection (see support/TestcontainersConfiguration). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <configuration>
+                    <args>
+                        <!-- Treat JSR-305 nullability annotations as strict Kotlin types. -->
+                        <arg>-Xjsr305=strict</arg>
+                    </args>
+                    <compilerPlugins>
+                        <!-- Makes @Component/@Configuration classes open (Spring needs non-final). -->
+                        <plugin>spring</plugin>
+                    </compilerPlugins>
+                    <jvmTarget>${java.version}</jvmTarget>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-allopen</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Spotless: the platform's Kotlin formatting standard (ADR-0001).
+                 It drives the ktlint *engine*, so the Kotlin rules are unchanged
+                 from a plain ktlint-plugin setup — Spotless is just the single,
+                 build-system-agnostic orchestrator we standardize on. `check` runs
+                 in `verify` (CI gate); run `mvn spotless:apply` to auto-format. Extra
+                 steps (pom sort, Markdown, license headers) are intentionally left
+                 off for now; enable platform-wide later (see ADR-0001). -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.44.5</version>
+                <configuration>
+                    <kotlin>
+                        <ktlint>
+                            <version>1.5.0</version>
+                        </ktlint>
+                    </kotlin>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotless-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,15 @@
+# Dev profile: verbose app logging and the local-dev Hive client secret. The dev
+# data seeder (T031) is gated on this profile. Activate with
+# SPRING_PROFILES_ACTIVE=dev — docker-compose sets this for the api service. The
+# default (prod) profile keeps production seed-free and quiet.
+logging:
+  level:
+    no.rauboti.pokedex: DEBUG
+
+# Local-dev OAuth client secret for the Hive login flow (Authorization-Code + PKCE,
+# used from T009). Matches the client secret seeded for the `pokedex` app in hive's
+# dev data (T006). Local-dev only, non-sensitive — real environments inject
+# HIVE_CLIENT_SECRET via env.
+pokedex:
+  hive:
+    client-secret: pokedex-local-dev
