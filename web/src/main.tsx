@@ -1,14 +1,30 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { createBrowserRouter, RouterProvider } from 'react-router'
 import { ThemeProvider, GlobalStyles } from '@rauboti/ui'
+import { AuthProvider } from '@/auth/AuthContext'
+import { routes } from '@/routes'
 
-/** Minimal ThemeProvider shell — routing, auth context, and the MSW hook land
- *  with the web API layer and shell tasks (T011/T012). */
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ThemeProvider>
-      <GlobalStyles />
-      <main>Pokedex</main>
-    </ThemeProvider>
-  </StrictMode>,
-)
+const router = createBrowserRouter(routes)
+
+/** In mock mode (`VITE_ENABLE_MSW=true`) start the MSW worker before rendering so the first
+ *  `/api/auth/me` probe is intercepted. A normal `yarn dev` skips this and hits the real api via
+ *  the Vite proxy. */
+const enableMocking = async (): Promise<void> => {
+  if (import.meta.env.VITE_ENABLE_MSW !== 'true') return
+  const { worker } = await import('@/mocks/browser')
+  await worker.start({ onUnhandledRequest: 'bypass' })
+}
+
+enableMocking().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ThemeProvider>
+        <GlobalStyles />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ThemeProvider>
+    </StrictMode>,
+  )
+})
