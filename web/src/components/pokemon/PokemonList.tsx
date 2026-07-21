@@ -1,8 +1,9 @@
 import { HStack, Stack, Text } from '@chakra-ui/react'
-import { Badge, Card, Grid } from '@rauboti/ui'
+import { Card, Grid } from '@rauboti/ui'
 import type { Pokemon } from '@/api/schemas'
 import { FlagBadges } from './FlagBadges'
 import { PokemonSprite } from './PokemonSprite'
+import { TypeBadge } from './TypeBadge'
 
 /**
  * The collection grid (US1, FR-010). A responsive @rauboti/ui `Grid` of `Card`s — one card per
@@ -25,9 +26,9 @@ export const PokemonList = ({ pokemon }: { pokemon: Pokemon[] }) => (
             <Stack gap="2" flex="1" minW="0">
               <HStack justify="space-between" wrap="wrap" gap="2">
                 <Text fontWeight="semibold">{displayName(p.species)}</Text>
-                <HStack gap="1">
+                <HStack gap="2">
                   {p.species.types.map((type) => (
-                    <Badge key={type}>{type}</Badge>
+                    <TypeBadge key={type} type={type} />
                   ))}
                 </HStack>
               </HStack>
