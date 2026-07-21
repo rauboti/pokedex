@@ -52,6 +52,30 @@ class SpeciesRepository(
             .optional()
             .orElse(null)
 
+    /** Resolve several species by id in one query (empty in → empty out) — for collection assembly. */
+    fun findByIds(ids: Collection<String>): List<Species> {
+        if (ids.isEmpty()) return emptyList()
+        return jdbc
+            .sql(
+                """
+                SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2, synced_at
+                FROM species
+                WHERE id IN (:ids)
+                """.trimIndent(),
+            ).param("ids", ids)
+            .query { rs, _ -> mapSpecies(rs) }
+            .list()
+    }
+
+    /** The registrable flag for a species (write invariant 0), or null if the id is unknown. */
+    fun registrable(id: String): Boolean? =
+        jdbc
+            .sql("SELECT registrable FROM species WHERE id = :id")
+            .param("id", id)
+            .query(Boolean::class.java)
+            .optional()
+            .orElse(null)
+
     private fun mapSpecies(rs: ResultSet): Species =
         Species(
             id = rs.getString("id"),
