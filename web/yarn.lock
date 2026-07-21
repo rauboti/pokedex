@@ -948,8 +948,8 @@ __metadata:
   linkType: soft
 
 "@rauboti/ui@npm:^0.4.0":
-  version: 0.4.1
-  resolution: "@rauboti/ui@npm:0.4.1::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40rauboti%2Fui%2F0.4.1%2F14e2a42c25be1d625060edc9bf1c4027a63552c8"
+  version: 0.4.2
+  resolution: "@rauboti/ui@npm:0.4.2::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40rauboti%2Fui%2F0.4.2%2Fccb1b114ade1e8ade8ef911f46ea165db7a0dfd3"
   dependencies:
     next-themes: "npm:^0.4.4"
   peerDependencies:
@@ -957,7 +957,7 @@ __metadata:
     "@emotion/react": ^11.0.0
     react: ">=19"
     react-dom: ">=19"
-  checksum: 10c0/a628729f9266a370ed4b412d1200f6935ed9f72427b636a7a26e0f376ddf70441d04ed539142de322c234e6452e0d249729e9153240e16f596cb108e88595a30
+  checksum: 10c0/11a2056cda4560443aff567ac1d868ae63d4eb7c696a04e5b5881ec10cf0e16e3ac07dadd4a6dd94c8b46f56bb80c01bb39702347865420459613e7262f6067b
   languageName: node
   linkType: hard
 
