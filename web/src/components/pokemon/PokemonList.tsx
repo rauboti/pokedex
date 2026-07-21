@@ -1,22 +1,23 @@
 import { HStack, Stack, Text } from '@chakra-ui/react'
-import { Badge, List } from '@rauboti/ui'
+import { Badge, Card, Grid } from '@rauboti/ui'
 import type { Pokemon } from '@/api/schemas'
 import { FlagBadges } from './FlagBadges'
 
 /**
- * The collection list (US1, FR-010). One `List.Item` (a bordered surface row) per Pokémon, showing
- * the species name+form, its types, and the server-derived level / CP / IV% read straight from the
- * DTO — the web app does no stat math (research D7). Rows are presentational here; opening a row to
- * the detail view lands with US3 (T025).
+ * The collection grid (US1, FR-010). A responsive @rauboti/ui `Grid` of `Card`s — one card per
+ * Pokémon, reflowing to more columns as the viewport widens so a large collection scrolls less. Each
+ * card shows the species name+form, its types, and the server-derived level / CP / IV% read straight
+ * from the DTO — the web app does no stat math (research D7). Kept as a `ul`/`li` list for
+ * semantics; cards are presentational here (opening a card to the detail view lands with US3, T025).
  */
 
 const displayName = (species: Pokemon['species']) =>
   species.form ? `${species.name} (${species.form})` : species.name
 
 export const PokemonList = ({ pokemon }: { pokemon: Pokemon[] }) => (
-  <List>
+  <Grid as="ul">
     {pokemon.map((p) => (
-      <List.Item key={p.id}>
+      <Card as="li" key={p.id}>
         <Stack gap="2">
           <HStack justify="space-between" wrap="wrap" gap="2">
             <Text fontWeight="semibold">{displayName(p.species)}</Text>
@@ -33,7 +34,7 @@ export const PokemonList = ({ pokemon }: { pokemon: Pokemon[] }) => (
           </HStack>
           <FlagBadges flags={p.flags} />
         </Stack>
-      </List.Item>
+      </Card>
     ))}
-  </List>
+  </Grid>
 )
