@@ -1,0 +1,185 @@
+[
+  {
+    "id": "VENUSAUR",
+    "formId": "VENUSAUR",
+    "dexNr": 3,
+    "names": { "English": "Venusaur" },
+    "stats": { "stamina": 190, "attack": 198, "defense": 189 },
+    "primaryType": { "type": "POKEMON_TYPE_GRASS", "names": { "English": "Grass" } },
+    "secondaryType": { "type": "POKEMON_TYPE_POISON", "names": { "English": "Poison" } },
+    "quickMoves": {
+      "RAZOR_LEAF_FAST": {
+        "id": "RAZOR_LEAF_FAST",
+        "power": 13,
+        "energy": 7,
+        "durationMs": 1000,
+        "type": { "type": "POKEMON_TYPE_GRASS", "names": { "English": "Grass" } },
+        "names": { "English": "Razor Leaf" }
+      },
+      "VINE_WHIP_FAST": {
+        "id": "VINE_WHIP_FAST",
+        "power": 7,
+        "energy": 6,
+        "durationMs": 600,
+        "type": { "type": "POKEMON_TYPE_GRASS", "names": { "English": "Grass" } },
+        "names": { "English": "Vine Whip" }
+      }
+    },
+    "cinematicMoves": {
+      "SLUDGE_BOMB": {
+        "id": "SLUDGE_BOMB",
+        "power": 80,
+        "energy": -50,
+        "durationMs": 2300,
+        "type": { "type": "POKEMON_TYPE_POISON", "names": { "English": "Poison" } },
+        "names": { "English": "Sludge Bomb" }
+      },
+      "POWER_WHIP": {
+        "id": "POWER_WHIP",
+        "power": 90,
+        "energy": -50,
+        "durationMs": 2600,
+        "type": { "type": "POKEMON_TYPE_GRASS", "names": { "English": "Grass" } },
+        "names": { "English": "Power Whip" }
+      }
+    },
+    "eliteQuickMoves": [],
+    "eliteCinematicMoves": {
+      "FRENZY_PLANT": {
+        "id": "FRENZY_PLANT",
+        "power": 100,
+        "energy": -50,
+        "durationMs": 2600,
+        "type": { "type": "POKEMON_TYPE_GRASS", "names": { "English": "Grass" } },
+        "names": { "English": "Frenzy Plant" }
+      }
+    },
+    "regionForms": [],
+    "megaEvolutions": {
+      "VENUSAUR_MEGA": {
+        "id": "VENUSAUR_MEGA",
+        "names": { "English": "Mega Venusaur" },
+        "stats": { "stamina": 190, "attack": 241, "defense": 246 },
+        "primaryType": { "type": "POKEMON_TYPE_GRASS", "names": { "English": "Grass" } },
+        "secondaryType": { "type": "POKEMON_TYPE_POISON", "names": { "English": "Poison" } }
+      }
+    }
+  },
+  {
+    "id": "RATTATA",
+    "formId": "RATTATA",
+    "dexNr": 19,
+    "names": { "English": "Rattata" },
+    "stats": { "stamina": 102, "attack": 103, "defense": 70 },
+    "primaryType": { "type": "POKEMON_TYPE_NORMAL", "names": { "English": "Normal" } },
+    "secondaryType": null,
+    "quickMoves": {
+      "QUICK_ATTACK_FAST": {
+        "id": "QUICK_ATTACK_FAST",
+        "power": 8,
+        "energy": 10,
+        "durationMs": 800,
+        "type": { "type": "POKEMON_TYPE_NORMAL", "names": { "English": "Normal" } },
+        "names": { "English": "Quick Attack" }
+      }
+    },
+    "cinematicMoves": {
+      "BODY_SLAM": {
+        "id": "BODY_SLAM",
+        "power": 50,
+        "energy": -35,
+        "durationMs": 1900,
+        "type": { "type": "POKEMON_TYPE_NORMAL", "names": { "English": "Normal" } },
+        "names": { "English": "Body Slam" }
+      }
+    },
+    "eliteQuickMoves": [],
+    "eliteCinematicMoves": {},
+    "megaEvolutions": {},
+    "regionForms": [
+      {
+        "id": "RATTATA_ALOLA",
+        "formId": "RATTATA_ALOLA",
+        "names": { "English": "Rattata (Alolan)" },
+        "stats": { "stamina": 102, "attack": 103, "defense": 70 },
+        "primaryType": { "type": "POKEMON_TYPE_DARK", "names": { "English": "Dark" } },
+        "secondaryType": { "type": "POKEMON_TYPE_NORMAL", "names": { "English": "Normal" } },
+        "quickMoves": {
+          "QUICK_ATTACK_FAST": {
+            "id": "QUICK_ATTACK_FAST",
+            "power": 8,
+            "energy": 10,
+            "durationMs": 800,
+            "type": { "type": "POKEMON_TYPE_NORMAL", "names": { "English": "Normal" } },
+            "names": { "English": "Quick Attack" }
+          },
+          "TACKLE_FAST": {
+            "id": "TACKLE_FAST",
+            "power": 5,
+            "energy": 5,
+            "durationMs": 500,
+            "type": { "type": "POKEMON_TYPE_NORMAL", "names": { "English": "Normal" } },
+            "names": { "English": "Tackle" }
+          }
+        },
+        "cinematicMoves": {
+          "CRUNCH": {
+            "id": "CRUNCH",
+            "power": 70,
+            "energy": -45,
+            "durationMs": 3200,
+            "type": { "type": "POKEMON_TYPE_DARK", "names": { "English": "Dark" } },
+            "names": { "English": "Crunch" }
+          }
+        },
+        "eliteQuickMoves": [],
+        "eliteCinematicMoves": {}
+      }
+    ]
+  },
+  {
+    "id": "CHARMANDER",
+    "formId": "CHARMANDER",
+    "dexNr": 4,
+    "names": { "English": "Charmander" },
+    "stats": { "stamina": 118, "attack": 116, "defense": 93 },
+    "primaryType": { "type": "POKEMON_TYPE_FIRE", "names": { "English": "Fire" } },
+    "secondaryType": null,
+    "quickMoves": {
+      "SCRATCH_FAST": {
+        "id": "SCRATCH_FAST",
+        "power": 6,
+        "energy": 8,
+        "durationMs": 500,
+        "type": { "type": "POKEMON_TYPE_NORMAL", "names": { "English": "Normal" } },
+        "names": { "English": "Scratch" }
+      }
+    },
+    "cinematicMoves": {
+      "FLAME_CHARGE": {
+        "id": "FLAME_CHARGE",
+        "power": 65,
+        "energy": -50,
+        "durationMs": 2600,
+        "type": { "type": "POKEMON_TYPE_FIRE", "names": { "English": "Fire" } },
+        "names": { "English": "Flame Charge" }
+      },
+      "BROKEN_MOVE": {
+        "id": "BROKEN_MOVE",
+        "type": { "type": "POKEMON_TYPE_FIRE", "names": { "English": "Fire" } },
+        "names": { "English": "Broken Move" }
+      }
+    },
+    "eliteQuickMoves": [],
+    "eliteCinematicMoves": {},
+    "megaEvolutions": {},
+    "regionForms": []
+  },
+  {
+    "id": "BROKEN_SPECIES",
+    "formId": "BROKEN_SPECIES",
+    "dexNr": 999,
+    "names": { "English": "Broken Species" },
+    "primaryType": { "type": "POKEMON_TYPE_NORMAL", "names": { "English": "Normal" } }
+  }
+]

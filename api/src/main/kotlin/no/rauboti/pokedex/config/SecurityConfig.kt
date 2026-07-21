@@ -3,6 +3,7 @@ package no.rauboti.pokedex.config
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -81,6 +82,9 @@ class SecurityConfig(
                 // SPA fetch endpoints: any signed-in hive user may read their identity or sign out,
                 // even without a pokedex grant (so the SPA can show the no-access screen and a sign-out).
                 it.requestMatchers("/api/auth/**").authenticated()
+                // Catalog sync is admin-only (spec assumption 2026-07-20) — more specific than the
+                // general data-API rule below, so it must be matched first.
+                it.requestMatchers(HttpMethod.POST, "/api/catalog/sync").hasRole("admin")
                 // The data API is gated on holding a pokedex app role (user or admin).
                 it.requestMatchers("/api/**").hasAnyRole("user", "admin")
                 it.anyRequest().authenticated()

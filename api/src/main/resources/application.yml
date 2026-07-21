@@ -33,8 +33,12 @@ pokedex:
   gamedata:
     # Community Game Master source for species/move data (research D5) — fetched
     # server-side by the sync module (T010). Tests stub the client interface with
-    # MockK; this base URL only matters for live syncs.
+    # MockK; this base URL only matters for live syncs. The full feed is
+    # `{base-url}/api/pokedex.json` (see the research.md D5 feed-shape addendum).
     base-url: ${GAMEDATA_BASE_URL:https://pokemon-go-api.github.io/pokemon-go-api}
+    # Run one sync automatically at startup when the catalog is empty (research D5).
+    # Disabled in the test profile so the suite never reaches for the network.
+    sync-on-startup: ${GAMEDATA_SYNC_ON_STARTUP:true}
   cors:
     # Comma-separated; consumed by the CORS configuration (T008).
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3050}

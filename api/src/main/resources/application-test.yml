@@ -6,3 +6,9 @@
 spring:
   flyway:
     enabled: true
+
+# Never run the empty-catalog startup sync in tests — the game-data source is stubbed
+# at the client interface (MockK) per test, and the suite must not reach the network (T010).
+pokedex:
+  gamedata:
+    sync-on-startup: false
