@@ -13,7 +13,7 @@ documented here rather than encoded in column names.
 ## Entity: Species (catalog)
 
 One species+form from the synced game data. Table `species`
-(migration `V1__create_catalog.sql`).
+(migration `V1__create_catalog.sql`; sprite URLs added in `V3__add_species_image_urls.sql`).
 
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
@@ -29,6 +29,8 @@ One species+form from the synced game data. Table `species`
 | `registrable` | `boolean` | NOT NULL, default `true` | `false` for mega/temporary battle forms — set by the sync normalizer; registration search filters on it (clarification 2026-07-20) |
 | `recommended_fast_move_id` | `text` | nullable, FK → `move(id)` | Computed at sync (research D8); NULL when the pool is empty/unknown |
 | `recommended_charged_move_id` | `text` | nullable, FK → `move(id)` | Computed at sync (research D8) |
+| `image_url` | `text` | nullable | Sprite URL from the feed's `assets.image`, captured at sync (research D5). NULL when the feed ships none (many forms/megas) — the web falls back to the name. Added 2026-07-22 (`V3`) |
+| `shiny_image_url` | `text` | nullable | Shiny sprite URL from the feed's `assets.shinyImage`; NULL when absent. Added 2026-07-22 (`V3`) |
 | `synced_at` | `timestamptz` | NOT NULL | Last time this row was written by a sync (FR-011) |
 
 **Index**: `(name)` — species search (`GET /api/species?q=`) is a name prefix/substring match.

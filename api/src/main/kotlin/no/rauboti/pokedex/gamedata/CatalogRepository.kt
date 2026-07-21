@@ -50,12 +50,14 @@ class CatalogRepository(
             .sql(
                 """
                 INSERT INTO species (id, dex_nr, name, form, base_atk, base_def, base_sta,
-                                     type_1, type_2, registrable, synced_at)
-                VALUES (:id, :dexNr, :name, :form, :atk, :def, :sta, :t1, :t2, :registrable, :syncedAt)
+                                     type_1, type_2, registrable, image_url, shiny_image_url, synced_at)
+                VALUES (:id, :dexNr, :name, :form, :atk, :def, :sta, :t1, :t2, :registrable,
+                        :imageUrl, :shinyImageUrl, :syncedAt)
                 ON CONFLICT (id) DO UPDATE SET
                     dex_nr = excluded.dex_nr, name = excluded.name, form = excluded.form,
                     base_atk = excluded.base_atk, base_def = excluded.base_def, base_sta = excluded.base_sta,
                     type_1 = excluded.type_1, type_2 = excluded.type_2, registrable = excluded.registrable,
+                    image_url = excluded.image_url, shiny_image_url = excluded.shiny_image_url,
                     synced_at = excluded.synced_at
                 """.trimIndent(),
             ).param("id", species.id)
@@ -68,6 +70,8 @@ class CatalogRepository(
             .param("t1", species.type1)
             .param("t2", species.type2)
             .param("registrable", species.registrable)
+            .param("imageUrl", species.imageUrl)
+            .param("shinyImageUrl", species.shinyImageUrl)
             .param("syncedAt", syncedAt.atUtc())
             .update()
     }

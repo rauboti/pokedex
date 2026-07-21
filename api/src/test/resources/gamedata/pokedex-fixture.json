@@ -4,6 +4,10 @@
     "formId": "VENUSAUR",
     "dexNr": 3,
     "names": { "English": "Venusaur" },
+    "assets": {
+      "image": "https://example.test/assets/Pokemon/pm3.icon.png",
+      "shinyImage": "https://example.test/assets/Pokemon/pm3.s.icon.png"
+    },
     "stats": { "stamina": 190, "attack": 198, "defense": 189 },
     "primaryType": { "type": "POKEMON_TYPE_GRASS", "names": { "English": "Grass" } },
     "secondaryType": { "type": "POKEMON_TYPE_POISON", "names": { "English": "Poison" } },

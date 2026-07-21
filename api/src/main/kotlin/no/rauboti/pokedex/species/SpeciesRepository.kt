@@ -22,7 +22,8 @@ class SpeciesRepository(
         jdbc
             .sql(
                 """
-                SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2, synced_at
+                SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2,
+                       image_url, shiny_image_url, synced_at
                 FROM species
                 WHERE registrable = true
                   AND position(lower(:q) in lower(name)) > 0
@@ -43,7 +44,8 @@ class SpeciesRepository(
         jdbc
             .sql(
                 """
-                SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2, synced_at
+                SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2,
+                       image_url, shiny_image_url, synced_at
                 FROM species
                 WHERE id = :id
                 """.trimIndent(),
@@ -58,7 +60,8 @@ class SpeciesRepository(
         return jdbc
             .sql(
                 """
-                SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2, synced_at
+                SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2,
+                       image_url, shiny_image_url, synced_at
                 FROM species
                 WHERE id IN (:ids)
                 """.trimIndent(),
@@ -86,6 +89,8 @@ class SpeciesRepository(
             baseAtk = rs.getInt("base_atk"),
             baseDef = rs.getInt("base_def"),
             baseSta = rs.getInt("base_sta"),
+            imageUrl = rs.getString("image_url"),
+            shinyImageUrl = rs.getString("shiny_image_url"),
             syncedAt = rs.getTimestamp("synced_at").toInstant(),
         )
 }

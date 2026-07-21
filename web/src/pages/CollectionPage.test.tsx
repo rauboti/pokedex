@@ -31,6 +31,8 @@ const makePokemon = (overrides: Partial<Pokemon> = {}): Pokemon => ({
     baseAtk: 103,
     baseDef: 70,
     baseSta: 102,
+    imageUrl: 'https://example.test/RATTATA_ALOLA.png',
+    shinyImageUrl: 'https://example.test/RATTATA_ALOLA.s.png',
     syncedAt: '2026-07-21T09:00:00Z',
   },
   ivAtk: 15,
@@ -76,6 +78,52 @@ describe('CollectionPage', () => {
     expect(screen.getByText('Dark')).toBeInTheDocument()
     expect(screen.getByText('Normal')).toBeInTheDocument()
     expect(screen.getByText('Shiny')).toBeInTheDocument()
+  })
+
+  test('shows the species sprite, using the shiny image for a shiny catch', async () => {
+    // makePokemon() is a shiny Alolan Rattata with both image URLs set.
+    server.use(
+      http.get('/api/pokemon', () => HttpResponse.json([makePokemon()])),
+    )
+
+    renderPage()
+
+    const sprite = await screen.findByRole('img', {
+      name: /Rattata \(Alola\)/i,
+    })
+    expect(sprite).toHaveAttribute(
+      'src',
+      'https://example.test/RATTATA_ALOLA.s.png',
+    )
+  })
+
+  test('falls back to no sprite when the species has no image', async () => {
+    server.use(
+      http.get('/api/pokemon', () =>
+        HttpResponse.json([
+          makePokemon({
+            species: {
+              id: 'NOIMG',
+              dexNr: 1,
+              name: 'Missingno',
+              form: null,
+              types: ['Normal'],
+              baseAtk: 1,
+              baseDef: 1,
+              baseSta: 1,
+              imageUrl: null,
+              shinyImageUrl: null,
+              syncedAt: '2026-07-21T09:00:00Z',
+            },
+          }),
+        ]),
+      ),
+    )
+
+    renderPage()
+
+    expect(await screen.findByText('Missingno')).toBeInTheDocument()
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
   test('shows an empty state when the collection has no Pokémon', async () => {

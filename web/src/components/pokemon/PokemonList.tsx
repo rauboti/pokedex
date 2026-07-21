@@ -2,6 +2,7 @@ import { HStack, Stack, Text } from '@chakra-ui/react'
 import { Badge, Card, Grid } from '@rauboti/ui'
 import type { Pokemon } from '@/api/schemas'
 import { FlagBadges } from './FlagBadges'
+import { PokemonSprite } from './PokemonSprite'
 
 /**
  * The collection grid (US1, FR-010). A responsive @rauboti/ui `Grid` of `Card`s — one card per
@@ -19,18 +20,23 @@ export const PokemonList = ({ pokemon }: { pokemon: Pokemon[] }) => (
     {pokemon.map((p) => (
       <Card as="li" key={p.id}>
         <Stack gap="2">
-          <HStack justify="space-between" wrap="wrap" gap="2">
-            <Text fontWeight="semibold">{displayName(p.species)}</Text>
-            <HStack gap="1">
-              {p.species.types.map((type) => (
-                <Badge key={type}>{type}</Badge>
-              ))}
-            </HStack>
-          </HStack>
-          <HStack gap="4" wrap="wrap" color="text.muted" fontSize="sm">
-            <Text>Level {p.derived.level}</Text>
-            <Text>CP {p.cp}</Text>
-            <Text>{p.derived.ivPercent}%</Text>
+          <HStack gap="3" align="start">
+            <PokemonSprite pokemon={p} />
+            <Stack gap="2" flex="1" minW="0">
+              <HStack justify="space-between" wrap="wrap" gap="2">
+                <Text fontWeight="semibold">{displayName(p.species)}</Text>
+                <HStack gap="1">
+                  {p.species.types.map((type) => (
+                    <Badge key={type}>{type}</Badge>
+                  ))}
+                </HStack>
+              </HStack>
+              <HStack gap="4" wrap="wrap" color="text.muted" fontSize="sm">
+                <Text>Level {p.derived.level}</Text>
+                <Text>CP {p.cp}</Text>
+                <Text>{p.derived.ivPercent}%</Text>
+              </HStack>
+            </Stack>
           </HStack>
           <FlagBadges flags={p.flags} />
         </Stack>

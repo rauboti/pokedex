@@ -45,8 +45,8 @@ class SpeciesApiTest : IntegrationTest() {
             .sql(
                 """
                 insert into species (id, dex_nr, name, form, base_atk, base_def, base_sta,
-                                     type_1, type_2, registrable, synced_at)
-                values (:id, :dex, :name, :form, 198, 189, 190, :t1, :t2, :reg, now())
+                                     type_1, type_2, registrable, image_url, shiny_image_url, synced_at)
+                values (:id, :dex, :name, :form, 198, 189, 190, :t1, :t2, :reg, :img, :shiny, now())
                 """.trimIndent(),
             ).param("id", id)
             .param("dex", dexNr)
@@ -55,6 +55,8 @@ class SpeciesApiTest : IntegrationTest() {
             .param("t1", type1)
             .param("t2", type2)
             .param("reg", registrable)
+            .param("img", "https://example.test/$id.png")
+            .param("shiny", "https://example.test/$id.s.png")
             .update()
     }
 
@@ -74,6 +76,17 @@ class SpeciesApiTest : IntegrationTest() {
                 jsonPath("$[0].types[0]") { value("Grass") }
                 jsonPath("$[0].types[1]") { value("Poison") }
                 jsonPath("$[0].baseAtk") { value(198) }
+            }
+    }
+
+    @Test
+    fun `exposes the synced sprite URLs on the species`() {
+        mvc
+            .get("/api/species?q=venusaur") { with(user("user")) }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$[0].imageUrl") { value("https://example.test/VENUSAUR.png") }
+                jsonPath("$[0].shinyImageUrl") { value("https://example.test/VENUSAUR.s.png") }
             }
     }
 
