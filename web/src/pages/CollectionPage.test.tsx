@@ -75,8 +75,9 @@ describe('CollectionPage', () => {
     expect(screen.getByText(/level 25\b/i)).toBeInTheDocument()
     expect(screen.getByText(/\bCP 844\b/i)).toBeInTheDocument()
     expect(screen.getByText(/93\.3%/)).toBeInTheDocument()
-    expect(screen.getByText('Dark')).toBeInTheDocument()
-    expect(screen.getByText('Normal')).toBeInTheDocument()
+    // Types are icon-only badges — their accessible name is the type.
+    expect(screen.getByRole('img', { name: 'Dark' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Normal' })).toBeInTheDocument()
     expect(screen.getByText('Shiny')).toBeInTheDocument()
   })
 
@@ -123,7 +124,10 @@ describe('CollectionPage', () => {
     renderPage()
 
     expect(await screen.findByText('Missingno')).toBeInTheDocument()
-    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    // No sprite for this species — the type icon may still render, so scope to the sprite's name.
+    expect(
+      screen.queryByRole('img', { name: 'Missingno' }),
+    ).not.toBeInTheDocument()
   })
 
   test('shows an empty state when the collection has no Pokémon', async () => {

@@ -62,12 +62,29 @@ describe('RegisterDialog', () => {
 
     await userEvent.type(screen.getByLabelText(/^species/i), 'rat')
 
-    // A regional form is listed by name + form, with its types shown.
+    // A regional form is listed by name + form, with its types shown as icons (the type is the
+    // icon's accessible name, so it folds into the option's accessible name).
     const option = await screen.findByRole('button', {
       name: /rattata.*alola/i,
     })
-    expect(option).toHaveTextContent(/dark/i)
-    expect(option).toHaveTextContent(/normal/i)
+    expect(option).toHaveAccessibleName(/dark/i)
+    expect(option).toHaveAccessibleName(/normal/i)
+  })
+
+  test('collapses to the selected species with its type badges, and Change reopens the search', async () => {
+    renderDialog()
+    await openDialog()
+
+    await pickSpecies('venu', /venusaur/i)
+
+    // The selection is now the value: name + type icons, and the search input is gone.
+    expect(screen.getByText('Venusaur')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Grass' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Poison' })).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^species/i)).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /change/i }))
+    expect(screen.getByLabelText(/^species/i)).toBeInTheDocument()
   })
 
   test('clamps IV inputs to 0–15 and requires CP ≥ 10', async () => {

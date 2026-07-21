@@ -1,14 +1,6 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { HStack, Stack, Text } from '@chakra-ui/react'
-import {
-  Badge,
-  Button,
-  Callout,
-  Card,
-  Combobox,
-  Dialog,
-  Input,
-} from '@rauboti/ui'
+import { Button, Callout, Card, Combobox, Dialog, Input } from '@rauboti/ui'
 import {
   createPokemon,
   derive,
@@ -207,14 +199,11 @@ export const RegisterDialog = ({
       <Stack gap="4">
         {error && <Callout status="error">{error}</Callout>}
 
-        <SpeciesSearch onSelect={setSpecies} />
-        {species && (
-          <HStack gap="1">
-            {species.types.map((type) => (
-              <Badge key={type}>{type}</Badge>
-            ))}
-          </HStack>
-        )}
+        <SpeciesSearch
+          selected={species}
+          onSelect={setSpecies}
+          onClear={() => setSpecies(null)}
+        />
 
         <HStack gap="3" align="start">
           <Input

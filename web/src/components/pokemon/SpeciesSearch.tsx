@@ -1,23 +1,27 @@
 import { useEffect, useState } from 'react'
 import { Box, HStack, Stack, Text } from '@chakra-ui/react'
-import { Badge, Button, Input } from '@rauboti/ui'
+import { Button, Input } from '@rauboti/ui'
 import { searchSpecies, type Species } from '@/api/schemas'
+import { TypeBadge } from './TypeBadge'
 
 /**
- * Species autocomplete for the register/edit dialog (US1). Types into `GET /api/species` (registrable
- * species only — mega/temporary forms are excluded server-side) and lists the matches with their
- * form and type badges, so a player disambiguates e.g. Alolan vs Kantonian Rattata before entering
- * IVs. In-flight requests are abandoned when the query changes (an AbortController plus a liveness
- * guard) so the last keystroke wins. Each result is a ghost [Button] (the library's subtle
- * clickable-row idiom); selecting one hands the full [Species] up and collapses the list.
+ * Species picker for the register/edit dialog (US1). While no species is chosen it's a search: type
+ * into `GET /api/species` (registrable species only) and pick from the matches, each showing its
+ * form and type icons. In-flight requests are abandoned when the query changes (an AbortController +
+ * liveness guard) so the last keystroke wins. Once chosen, it collapses to a **selected-value chip**
+ * — the species name with its type badges inline — plus a Change action that reopens the search.
  */
 
 const displayName = (s: Species) => (s.form ? `${s.name} (${s.form})` : s.name)
 
 export const SpeciesSearch = ({
+  selected,
   onSelect,
+  onClear,
 }: {
+  selected: Species | null
   onSelect: (species: Species) => void
+  onClear: () => void
 }) => {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Species[]>([])
@@ -43,8 +47,38 @@ export const SpeciesSearch = ({
 
   const choose = (species: Species) => {
     onSelect(species)
-    setQuery(displayName(species))
+    setQuery('')
     setShowResults(false)
+  }
+
+  // Selected state: the chosen species is the value — name + its type badges — with a Change action.
+  if (selected) {
+    return (
+      <Box>
+        <Text fontSize="sm" fontWeight="medium" mb="1">
+          Species
+        </Text>
+        <HStack
+          justify="space-between"
+          gap="3"
+          borderWidth="1px"
+          borderColor="border"
+          rounded="md"
+          px="3"
+          py="2"
+        >
+          <HStack gap="2" minW="0">
+            <Text fontWeight="medium">{displayName(selected)}</Text>
+            {selected.types.map((type) => (
+              <TypeBadge key={type} type={type} />
+            ))}
+          </HStack>
+          <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+            Change
+          </Button>
+        </HStack>
+      </Box>
+    )
   }
 
   return (
@@ -75,9 +109,9 @@ export const SpeciesSearch = ({
               onClick={() => choose(species)}
             >
               <Text fontWeight="medium">{displayName(species)}</Text>
-              <HStack gap="1">
+              <HStack gap="2">
                 {species.types.map((type) => (
-                  <Badge key={type}>{type}</Badge>
+                  <TypeBadge key={type} type={type} />
                 ))}
               </HStack>
             </Button>
