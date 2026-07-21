@@ -27,7 +27,7 @@ class SpeciesRepository(
                 WHERE registrable = true
                   AND position(lower(:q) in lower(name)) > 0
                 ORDER BY dex_nr, form NULLS FIRST
-                limit :limit
+                LIMIT :limit
                 """.trimIndent(),
             ).param("q", query)
             .param("limit", limit)
