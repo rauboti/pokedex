@@ -12,7 +12,8 @@ data class NormalizedCatalog(
     val pool: List<NormalizedPoolEntry>,
 )
 
-/** One species+form row (data-model `species`). Megas/temporary battle forms are `registrable=false`. */
+/** One species+form row (data-model `species`). Megas/temporary battle forms are `registrable=false`.
+ *  `imageUrl`/`shinyImageUrl` come from the feed's `assets` and are null when absent (research D5). */
 data class NormalizedSpecies(
     val id: String,
     val dexNr: Int,
@@ -24,6 +25,8 @@ data class NormalizedSpecies(
     val type1: String,
     val type2: String?,
     val registrable: Boolean,
+    val imageUrl: String?,
+    val shinyImageUrl: String?,
 )
 
 /** One fast/charged move row (data-model `move`). */

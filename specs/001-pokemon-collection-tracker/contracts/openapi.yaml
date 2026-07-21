@@ -265,6 +265,8 @@ components:
         baseAtk: { type: integer }
         baseDef: { type: integer }
         baseSta: { type: integer }
+        imageUrl: { type: [string, "null"], description: "Synced sprite URL; null when the feed ships none for a form" }
+        shinyImageUrl: { type: [string, "null"], description: "Synced shiny-sprite URL; null when absent" }
         syncedAt: { type: string, format: date-time }
       required: [id, dexNr, name, form, types, baseAtk, baseDef, baseSta, syncedAt]
 

@@ -54,6 +54,14 @@ class SyncServiceTest : IntegrationTest() {
             .query(Int::class.java)
             .single()
 
+    private fun imageUrlOf(id: String): String? =
+        jdbc
+            .sql("select image_url from species where id = :id")
+            .param("id", id)
+            .query(String::class.java)
+            .optional()
+            .orElse(null)
+
     private fun poolMoveIds(speciesId: String): List<String> =
         jdbc
             .sql("select move_id from species_move where species_id = :sid")
@@ -73,6 +81,8 @@ class SyncServiceTest : IntegrationTest() {
         assertThat(catalog.lastSyncedAt()).isNotNull()
         assertThat(poolMoveIds("VENUSAUR"))
             .containsExactlyInAnyOrder("RAZOR_LEAF_FAST", "VINE_WHIP_FAST", "SLUDGE_BOMB", "POWER_WHIP", "FRENZY_PLANT")
+        // Sprite URLs from the feed's `assets` block are persisted by the upsert (research D5).
+        assertThat(imageUrlOf("VENUSAUR")).isEqualTo("https://example.test/assets/Pokemon/pm3.icon.png")
     }
 
     @Test

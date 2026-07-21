@@ -63,6 +63,16 @@ class GamedataNormalizerTest {
     }
 
     @Test
+    fun `captures sprite URLs from the feed assets block, null when absent`() {
+        val venusaur = species("VENUSAUR")
+        assertThat(venusaur.imageUrl).isEqualTo("https://example.test/assets/Pokemon/pm3.icon.png")
+        assertThat(venusaur.shinyImageUrl).isEqualTo("https://example.test/assets/Pokemon/pm3.s.icon.png")
+        // CHARMANDER's fixture entry has no `assets` → both null (the web falls back to the name).
+        assertThat(species("CHARMANDER").imageUrl).isNull()
+        assertThat(species("CHARMANDER").shinyImageUrl).isNull()
+    }
+
+    @Test
     fun `skips malformed species without failing the feed`() {
         // BROKEN_SPECIES has no stats; the rest still normalize.
         assertThat(catalog.species.map { it.id })

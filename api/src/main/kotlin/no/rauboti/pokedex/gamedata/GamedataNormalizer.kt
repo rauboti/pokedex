@@ -88,6 +88,8 @@ class GamedataNormalizer {
                 type1 = type1,
                 type2 = type2,
                 registrable = registrable,
+                imageUrl = node.at("/assets/image").asTextOrNull(),
+                shinyImageUrl = node.at("/assets/shinyImage").asTextOrNull(),
             ),
         )
 
