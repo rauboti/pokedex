@@ -11,6 +11,31 @@ data-model, contracts/openapi.yaml, quickstart). Project principles:
 server-side (api stats/); species/move data synced, never hardcoded; CPM/dust/type
 chart vendored.
 
+## Web UI: `@rauboti/ui` first
+
+The web app is built on `@rauboti/ui` (Gaute maintains that library, repo at
+`../../ui` — sibling of `platform/`). **Reach for a `@rauboti/ui` component whenever one
+naturally fits** before hand-rolling markup or dropping to raw Chakra: use its own
+idioms (e.g. `Button variant="ghost"` for a subtle clickable row, `Card` for a grouped
+surface, `List.LinkItem` for a nav row, `Combobox`/`Tag`, the `Field`-wrapped form
+controls). Raw Chakra primitives (`Box`/`Stack`/`HStack`/`Text`/`Heading`/`Center`/
+`Spinner`) are fine where the library intentionally has no wrapper.
+
+When the library gets in the way, **flag it rather than working around it silently** so
+we can evolve the library:
+
+- **Missing support on an existing component** (a prop/behaviour it should have) — flag
+  it; we may alter the component.
+- **A missing component** (no DS primitive for the need) — flag it; we may add one.
+- **Something bespoke here that other apps would reuse** — flag it as a candidate to
+  **lift into `@rauboti/ui`**.
+
+Known gaps to revisit (2026-07-21): no `Checkbox`/`Switch`/`Radio` (a standalone boolean
+toggle has no primitive); `Combobox` has no async/remote-item support (so a
+server-searched picker like `SpeciesSearch` stays bespoke). Changes to `../../ui` follow
+its own PR-only workflow on a branch there, left uncommitted for Gaute to bump/publish;
+this app pins a caret range and picks up the new version on reinstall.
+
 ## Git workflow (non-negotiable)
 
 Every implementation task gets a FRESH feature branch off `main`, created BEFORE any
