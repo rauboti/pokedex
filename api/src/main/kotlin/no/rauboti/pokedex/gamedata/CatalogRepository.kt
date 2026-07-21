@@ -89,9 +89,9 @@ class CatalogRepository(
         }
     }
 
-    fun speciesCount(): Long = jdbc.sql("select count(*) from species").query(Long::class.java).single()
+    fun speciesCount(): Long = jdbc.sql("SELECT count(*) FROM species").query(Long::class.java).single()
 
-    fun moveCount(): Long = jdbc.sql("select count(*) from move").query(Long::class.java).single()
+    fun moveCount(): Long = jdbc.sql("SELECT count(*) FROM move").query(Long::class.java).single()
 
     /** The most recent sync time across the catalog, or null before the first sync. */
     fun lastSyncedAt(): Instant? =
