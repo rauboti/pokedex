@@ -34,6 +34,24 @@ class SpeciesRepository(
             .query { rs, _ -> mapSpecies(rs) }
             .list()
 
+    /**
+     * A single species by its stable id, or null if absent. Unlike [search] this is not filtered by
+     * `registrable` — it's a direct lookup (e.g. the derivation preview needs base stats for any id
+     * the caller supplies; the registrable check on *save* lives in the write path, T017).
+     */
+    fun findById(id: String): Species? =
+        jdbc
+            .sql(
+                """
+                SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2, synced_at
+                FROM species
+                WHERE id = :id
+                """.trimIndent(),
+            ).param("id", id)
+            .query { rs, _ -> mapSpecies(rs) }
+            .optional()
+            .orElse(null)
+
     private fun mapSpecies(rs: ResultSet): Species =
         Species(
             id = rs.getString("id"),

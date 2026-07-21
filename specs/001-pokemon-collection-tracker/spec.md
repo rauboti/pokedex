@@ -45,9 +45,13 @@ calculators for the same inputs.
    effective stats, IV% (100%), and types.
 3. **Given** IVs and a CP that correspond to exactly one level, **When** the player
    saves, **Then** that level is assigned automatically without further input.
-4. **Given** IVs and a CP that match more than one adjacent level (CP collision),
-   **When** the player saves, **Then** the app presents all matching levels with a
-   disambiguation hint (e.g. the differing power-up dust cost) and the player picks one.
+4. **Given** IVs and a CP that match more than one level (a CP collision — in practice the
+   CP-floor plateau at the lowest levels, where several adjacent half-levels share the
+   minimum CP), **When** the player saves, **Then** the app presents all matching levels,
+   each shown with its power-up dust cost, and the player picks one. (Amended 2026-07-21,
+   T016: because such collisions occur only *within* the CP-floor plateau — a single dust
+   tier — the candidates' dust costs are equal; the dust figure is an informational hint
+   shown per candidate, not the differentiator, and the player distinguishes by level.)
 5. **Given** IVs and a CP that match no level for that species, **When** the player
    attempts to save, **Then** the app rejects the combination with a message explaining
    that species, IVs, and CP are inconsistent.

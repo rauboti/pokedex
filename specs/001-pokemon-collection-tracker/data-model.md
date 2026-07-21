@@ -114,7 +114,7 @@ One registered Pokémon, owned by exactly one player. Table `caught_pokemon`
 | Data | Location | Consumer |
 |------|----------|----------|
 | CPM per level (1.0–51.0 half-steps) | `api/src/main/resources/reference/cpm.json` | Solver, projections (D7) |
-| Power-up dust cost per level band | `api/src/main/resources/reference/dust.json` | CP-collision disambiguation hints (US1 scenario 4) |
+| Power-up dust cost per level band | `api/src/main/resources/reference/dust.json` | Shown per CP-collision candidate (US1 scenario 4) — an informational hint. Amended 2026-07-21 (T016): collisions occur only within the low-level CP-floor plateau, where dust cost is **equal** across candidates, so dust is not the differentiator (it separates only across bands, never within a plateau); the player distinguishes candidates by level. |
 | Type-effectiveness chart (18×18, GO multipliers) | `web/src/lib/typeChart.ts` | Matchup view (US4), computed client-side from species types |
 
 ## Relationships & derived-value flow
