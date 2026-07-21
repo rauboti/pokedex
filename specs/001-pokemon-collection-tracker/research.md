@@ -97,6 +97,36 @@ FK integrity, offline reads, moveset ranking, and rebalance detection (D9); sche
 cron sync — deferred, on-demand + empty-catalog startup sync satisfies "best-effort
 freshness" (spec assumption) with less machinery.
 
+**Feed shape addendum (2026-07-21, captured during T010 from the live source)**:
+- **Source base**: `https://pokemon-go-api.github.io/pokemon-go-api` (config
+  `pokedex.gamedata.base-url`, env `GAMEDATA_BASE_URL`).
+- **Full feed**: `GET {base}/api/pokedex.json` — a JSON **array** of species objects.
+  (Per-id files exist at `{base}/api/pokedex/id/{dexNr}.json`; there is **no**
+  top-level `moves.json` — `{base}/api/moves.json` returns 404. Move data is embedded
+  per species.)
+- **Species object** fields consumed: `id` (stable, e.g. `VENUSAUR`), `dexNr`,
+  `names.English`, `stats.{attack,defense,stamina}`, `primaryType.type` /
+  `secondaryType.type` (enum strings like `POKEMON_TYPE_GRASS`; normalized to a
+  capitalized short name `Grass` by stripping the `POKEMON_TYPE_` prefix — no
+  dependency on the per-language `names` map), `regionForms` (array of full species
+  objects → each a registrable row, `dexNr` inherited from the parent), and
+  `megaEvolutions` (object **keyed by id**, each `{id, names, stats, primaryType,
+  secondaryType}` with **no moves** → each a **`registrable=false`** row, mega/temporary
+  battle forms per clarification 2026-07-20).
+- **Moves** live under four per-species collections: `quickMoves` (fast, pool
+  `legacy=false`), `cinematicMoves` (charged, `legacy=false`), `eliteQuickMoves` (fast,
+  `legacy=true`), `eliteCinematicMoves` (charged, `legacy=true`). Each is an object
+  keyed by move id with `{id, names.English, type.type, power, energy, durationMs}`.
+  **Quirk**: an *empty* elite collection serializes as `[]` (a JSON array), not `{}` —
+  the normalizer treats any non-object collection as empty rather than failing.
+- **Robustness**: the normalizer walks the tree defensively (Jackson tree model) —
+  a species or move entry missing a required field is **skipped, not fatal**; a feed
+  whose root is not a JSON array (or is unparseable) raises
+  `GamedataUnavailableException` (→ 502). Committed fixture
+  `api/src/test/resources/gamedata/pokedex-fixture.json` mirrors these shapes (incl.
+  the `[]` empty-elite quirk, a mega, a regional form, and a malformed entry) for the
+  pure normalizer test; the live feed is exercised manually at the Phase 2 checkpoint.
+
 ## D6. Vendored stable reference tables (new; constitution mandate)
 
 **Decision**: Three stable tables are vendored into the repo, not fetched:
