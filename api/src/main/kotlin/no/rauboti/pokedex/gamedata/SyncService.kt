@@ -14,15 +14,17 @@ import java.time.Instant
  * whole batch back.
  *
  * Upsert order respects the FKs: moves first (a pool row references `move`), then species, then each
- * species' pool is replaced wholesale. Species/move rows are never deleted. Two post-sync seams are
- * deliberate no-ops until their tasks land: the moveset ranker (writes `recommended_*_move_id`, T028)
- * and the staleness rescan (flags rebalanced caught Pokémon, T018).
+ * species' pool is replaced wholesale. Species/move rows are never deleted. The moveset ranker (writes
+ * `recommended_*_move_id`, T028) is still a deliberate no-op seam; the staleness rescan (flags
+ * rebalanced caught Pokémon, FR-013/T018) is now live in [StalenessRescan]. Both run after the write
+ * transaction commits, against the freshly-persisted catalog.
  */
 @Service
 class SyncService(
     private val client: GamedataClient,
     private val normalizer: GamedataNormalizer,
     private val catalog: CatalogRepository,
+    private val stalenessRescan: StalenessRescan,
     txManager: PlatformTransactionManager,
 ) {
     private val tx = TransactionTemplate(txManager)
@@ -48,8 +50,8 @@ class SyncService(
         // Implemented in T028; species.recommended_*_move_id stays null until then.
     }
 
-    /** No-op seam: re-derive each caught Pokémon against refreshed stats and flag mismatches (FR-013, T018). */
+    /** Re-derive each caught Pokémon against the refreshed stats and flag mismatches (FR-013, T018). */
     private fun rescanStaleness() {
-        // Implemented in T018.
+        stalenessRescan.rescan()
     }
 }
