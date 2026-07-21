@@ -1,0 +1,397 @@
+{
+  "_source": "Power-up stardust cost per level from pogoapi.net /api/v1/pokemon_powerup_requirements.json (stardust_to_upgrade at each current_level). Used only to label CP-collision candidates by dust cost (US1 scenario 4). Vendored per research D6.",
+  "bands": [
+    {
+      "level": 1.0,
+      "dust": 200
+    },
+    {
+      "level": 1.5,
+      "dust": 200
+    },
+    {
+      "level": 2.0,
+      "dust": 200
+    },
+    {
+      "level": 2.5,
+      "dust": 200
+    },
+    {
+      "level": 3.0,
+      "dust": 400
+    },
+    {
+      "level": 3.5,
+      "dust": 400
+    },
+    {
+      "level": 4.0,
+      "dust": 400
+    },
+    {
+      "level": 4.5,
+      "dust": 400
+    },
+    {
+      "level": 5.0,
+      "dust": 600
+    },
+    {
+      "level": 5.5,
+      "dust": 600
+    },
+    {
+      "level": 6.0,
+      "dust": 600
+    },
+    {
+      "level": 6.5,
+      "dust": 600
+    },
+    {
+      "level": 7.0,
+      "dust": 800
+    },
+    {
+      "level": 7.5,
+      "dust": 800
+    },
+    {
+      "level": 8.0,
+      "dust": 800
+    },
+    {
+      "level": 8.5,
+      "dust": 800
+    },
+    {
+      "level": 9.0,
+      "dust": 1000
+    },
+    {
+      "level": 9.5,
+      "dust": 1000
+    },
+    {
+      "level": 10.0,
+      "dust": 1000
+    },
+    {
+      "level": 10.5,
+      "dust": 1000
+    },
+    {
+      "level": 11.0,
+      "dust": 1300
+    },
+    {
+      "level": 11.5,
+      "dust": 1300
+    },
+    {
+      "level": 12.0,
+      "dust": 1300
+    },
+    {
+      "level": 12.5,
+      "dust": 1300
+    },
+    {
+      "level": 13.0,
+      "dust": 1600
+    },
+    {
+      "level": 13.5,
+      "dust": 1600
+    },
+    {
+      "level": 14.0,
+      "dust": 1600
+    },
+    {
+      "level": 14.5,
+      "dust": 1600
+    },
+    {
+      "level": 15.0,
+      "dust": 1900
+    },
+    {
+      "level": 15.5,
+      "dust": 1900
+    },
+    {
+      "level": 16.0,
+      "dust": 1900
+    },
+    {
+      "level": 16.5,
+      "dust": 1900
+    },
+    {
+      "level": 17.0,
+      "dust": 2200
+    },
+    {
+      "level": 17.5,
+      "dust": 2200
+    },
+    {
+      "level": 18.0,
+      "dust": 2200
+    },
+    {
+      "level": 18.5,
+      "dust": 2200
+    },
+    {
+      "level": 19.0,
+      "dust": 2500
+    },
+    {
+      "level": 19.5,
+      "dust": 2500
+    },
+    {
+      "level": 20.0,
+      "dust": 2500
+    },
+    {
+      "level": 20.5,
+      "dust": 2500
+    },
+    {
+      "level": 21.0,
+      "dust": 3000
+    },
+    {
+      "level": 21.5,
+      "dust": 3000
+    },
+    {
+      "level": 22.0,
+      "dust": 3000
+    },
+    {
+      "level": 22.5,
+      "dust": 3000
+    },
+    {
+      "level": 23.0,
+      "dust": 3500
+    },
+    {
+      "level": 23.5,
+      "dust": 3500
+    },
+    {
+      "level": 24.0,
+      "dust": 3500
+    },
+    {
+      "level": 24.5,
+      "dust": 3500
+    },
+    {
+      "level": 25.0,
+      "dust": 4000
+    },
+    {
+      "level": 25.5,
+      "dust": 4000
+    },
+    {
+      "level": 26.0,
+      "dust": 4000
+    },
+    {
+      "level": 26.5,
+      "dust": 4000
+    },
+    {
+      "level": 27.0,
+      "dust": 4500
+    },
+    {
+      "level": 27.5,
+      "dust": 4500
+    },
+    {
+      "level": 28.0,
+      "dust": 4500
+    },
+    {
+      "level": 28.5,
+      "dust": 4500
+    },
+    {
+      "level": 29.0,
+      "dust": 5000
+    },
+    {
+      "level": 29.5,
+      "dust": 5000
+    },
+    {
+      "level": 30.0,
+      "dust": 5000
+    },
+    {
+      "level": 30.5,
+      "dust": 5000
+    },
+    {
+      "level": 31.0,
+      "dust": 6000
+    },
+    {
+      "level": 31.5,
+      "dust": 6000
+    },
+    {
+      "level": 32.0,
+      "dust": 6000
+    },
+    {
+      "level": 32.5,
+      "dust": 6000
+    },
+    {
+      "level": 33.0,
+      "dust": 7000
+    },
+    {
+      "level": 33.5,
+      "dust": 7000
+    },
+    {
+      "level": 34.0,
+      "dust": 7000
+    },
+    {
+      "level": 34.5,
+      "dust": 7000
+    },
+    {
+      "level": 35.0,
+      "dust": 8000
+    },
+    {
+      "level": 35.5,
+      "dust": 8000
+    },
+    {
+      "level": 36.0,
+      "dust": 8000
+    },
+    {
+      "level": 36.5,
+      "dust": 8000
+    },
+    {
+      "level": 37.0,
+      "dust": 9000
+    },
+    {
+      "level": 37.5,
+      "dust": 9000
+    },
+    {
+      "level": 38.0,
+      "dust": 9000
+    },
+    {
+      "level": 38.5,
+      "dust": 9000
+    },
+    {
+      "level": 39.0,
+      "dust": 10000
+    },
+    {
+      "level": 39.5,
+      "dust": 10000
+    },
+    {
+      "level": 40.0,
+      "dust": 10000
+    },
+    {
+      "level": 40.5,
+      "dust": 10000
+    },
+    {
+      "level": 41.0,
+      "dust": 11000
+    },
+    {
+      "level": 41.5,
+      "dust": 11000
+    },
+    {
+      "level": 42.0,
+      "dust": 11000
+    },
+    {
+      "level": 42.5,
+      "dust": 11000
+    },
+    {
+      "level": 43.0,
+      "dust": 12000
+    },
+    {
+      "level": 43.5,
+      "dust": 12000
+    },
+    {
+      "level": 44.0,
+      "dust": 12000
+    },
+    {
+      "level": 44.5,
+      "dust": 12000
+    },
+    {
+      "level": 45.0,
+      "dust": 13000
+    },
+    {
+      "level": 45.5,
+      "dust": 13000
+    },
+    {
+      "level": 46.0,
+      "dust": 13000
+    },
+    {
+      "level": 46.5,
+      "dust": 13000
+    },
+    {
+      "level": 47.0,
+      "dust": 14000
+    },
+    {
+      "level": 47.5,
+      "dust": 14000
+    },
+    {
+      "level": 48.0,
+      "dust": 14000
+    },
+    {
+      "level": 48.5,
+      "dust": 14000
+    },
+    {
+      "level": 49.0,
+      "dust": 15000
+    },
+    {
+      "level": 49.5,
+      "dust": 15000
+    }
+  ]
+}
