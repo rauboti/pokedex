@@ -6,7 +6,7 @@ import { ThemeProvider } from '@rauboti/ui'
 import { RegisterDialog } from './RegisterDialog'
 import { server } from '@/mocks/server'
 import { COLLISION_CP, IMPOSSIBLE_CP } from '@/mocks/fixtures'
-import type { PokemonInput } from '@/api/schemas'
+import type { Pokemon, PokemonInput, PokemonPatch } from '@/api/schemas'
 
 /**
  * The register dialog is the MVP write path (US1): search a species (forms + types), enter IVs + the
@@ -241,5 +241,163 @@ describe('RegisterDialog', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     )
+  })
+})
+
+/**
+ * Edit mode (US2): the same dialog, opened prefilled from an existing Pokémon and controlled by the
+ * caller (the collection page opens it from a row). Changing IVs/CP re-runs the same derivation
+ * preview, and saving PATCHes the edit instead of creating. Purification is just an ordinary edit
+ * (change IVs/CP + set the purified flag) in one save (spec assumption).
+ */
+const makeVenusaur = (over: Partial<Pokemon> = {}): Pokemon => ({
+  id: 'edit-1',
+  species: {
+    id: 'VENUSAUR',
+    dexNr: 3,
+    name: 'Venusaur',
+    form: null,
+    types: ['Grass', 'Poison'],
+    baseAtk: 198,
+    baseDef: 189,
+    baseSta: 190,
+    syncedAt: '2026-07-21T09:00:00Z',
+  },
+  ivAtk: 15,
+  ivDef: 14,
+  ivSta: 13,
+  cp: 2087,
+  flags: {
+    shiny: false,
+    shadow: false,
+    lucky: false,
+    purified: false,
+    bestBuddy: false,
+  },
+  moves: { fast: null, charged1: null, charged2: null },
+  derived: {
+    level: 20,
+    hp: 120,
+    attack: 130.5,
+    defense: 120.4,
+    stamina: 150,
+    ivPercent: 93.3,
+    perfect: false,
+    projections: [],
+  },
+  stale: false,
+  caughtAt: '2026-07-10',
+  createdAt: '2026-07-10T18:00:00Z',
+  ...over,
+})
+
+const renderEdit = (
+  editing: Pokemon,
+  props: Partial<Parameters<typeof RegisterDialog>[0]> = {},
+) =>
+  render(
+    <ThemeProvider>
+      <RegisterDialog
+        editing={editing}
+        open
+        onOpenChange={() => {}}
+        {...props}
+      />
+    </ThemeProvider>,
+  )
+
+describe('RegisterDialog — edit mode', () => {
+  test('opens prefilled from the Pokémon being edited', async () => {
+    renderEdit(makeVenusaur())
+
+    expect(await screen.findByText(/edit pokémon/i)).toBeInTheDocument()
+    expect(screen.getByText('Venusaur')).toBeInTheDocument()
+    expect(screen.getByLabelText(/attack iv/i)).toHaveValue(15)
+    expect(screen.getByLabelText(/defense iv/i)).toHaveValue(14)
+    expect(screen.getByLabelText(/stamina iv/i)).toHaveValue(13)
+    expect(screen.getByLabelText(/^cp/i)).toHaveValue(2087)
+  })
+
+  test('re-runs the derivation on a CP change and PATCHes the edit', async () => {
+    let body: PokemonPatch | undefined
+    server.use(
+      http.patch('/api/pokemon/:id', async ({ request }) => {
+        body = (await request.json()) as PokemonPatch
+        return HttpResponse.json({
+          ...makeVenusaur(),
+          cp: body.cp ?? 0,
+          stale: false,
+        })
+      }),
+    )
+    const onUpdated = vi.fn()
+    renderEdit(makeVenusaur(), { onUpdated })
+
+    await screen.findByText(/level 20\b/i) // prefill derivation settled
+    const cp = screen.getByLabelText(/^cp/i)
+    await userEvent.clear(cp)
+    await userEvent.type(cp, '2100')
+    await screen.findByText(/level 20\b/i) // re-derivation settled
+
+    await userEvent.click(screen.getByRole('button', { name: /^save/i }))
+
+    await waitFor(() => expect(onUpdated).toHaveBeenCalledTimes(1))
+    expect(body).toMatchObject({
+      speciesId: 'VENUSAUR',
+      cp: 2100,
+      level: 20,
+      ivAtk: 15,
+    })
+  })
+
+  test('the purification walkthrough saves IV/CP edits and the purified flag in one PATCH', async () => {
+    let body: PokemonPatch | undefined
+    server.use(
+      http.patch('/api/pokemon/:id', async ({ request }) => {
+        body = (await request.json()) as PokemonPatch
+        return HttpResponse.json({ ...makeVenusaur(), stale: false })
+      }),
+    )
+    // A shadow Venusaur being purified: keep shadow, add purified, tweak an IV.
+    renderEdit(
+      makeVenusaur({
+        flags: {
+          shiny: false,
+          shadow: true,
+          lucky: false,
+          purified: false,
+          bestBuddy: false,
+        },
+      }),
+    )
+    await screen.findByText(/level 20\b/i)
+
+    const atk = screen.getByLabelText(/attack iv/i)
+    await userEvent.clear(atk)
+    await userEvent.type(atk, '13')
+    await userEvent.click(
+      screen.getByRole('button', { name: /toggle options/i }),
+    )
+    await userEvent.click(
+      await screen.findByRole('option', { name: /purified/i }),
+    )
+    await screen.findByText(/level 20\b/i)
+
+    await userEvent.click(screen.getByRole('button', { name: /^save/i }))
+
+    await waitFor(() => expect(body).toBeDefined())
+    expect(body).toMatchObject({ purified: true, shadow: true, ivAtk: 13 })
+  })
+
+  test('a colliding CP shows the level picker on edit', async () => {
+    renderEdit(
+      makeVenusaur({
+        cp: COLLISION_CP,
+        derived: { ...makeVenusaur().derived, level: 18 },
+      }),
+    )
+    expect(
+      await screen.findByRole('combobox', { name: /^level$/i }),
+    ).toBeInTheDocument()
   })
 })

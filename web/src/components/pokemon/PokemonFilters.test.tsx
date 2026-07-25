@@ -3,13 +3,16 @@ import { useState } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from '@rauboti/ui'
-import { PokemonFilters, type PokemonFiltersValue } from './PokemonFilters'
+import {
+  PokemonFilters,
+  PokemonFilterSummary,
+  type PokemonFiltersValue,
+} from './PokemonFilters'
 
 /**
- * The collection filter/sort bar (US2). A controlled component: it renders the current filter + sort
- * and emits the next value on every change. Filtering/sorting is applied elsewhere (the `lib/` pure
- * functions from T021, wired into the page in T023) — here we only assert the control surface and the
- * state it emits.
+ * The search / filter / sort toolbar (US2): three icon buttons, each opening a popover with its
+ * control. Controlled — it emits the next {filter, sort} on every change; the page applies it with the
+ * pure `lib/` functions. Here we only assert the control surface, the emitted state, and the summary.
  */
 
 const INITIAL: PokemonFiltersValue = {
@@ -41,63 +44,108 @@ const renderFilters = (initial: PokemonFiltersValue = INITIAL) => {
   return { latest }
 }
 
-// Open a single-select combobox by its field label and reveal its options.
-const openCombobox = async (name: RegExp) => {
-  await userEvent.click(screen.getByRole('combobox', { name }))
-  await userEvent.keyboard('{ArrowDown}')
+const renderSummary = (initial: PokemonFiltersValue) => {
+  const Harness = () => {
+    const [value, setValue] = useState<PokemonFiltersValue>(initial)
+    return <PokemonFilterSummary value={value} onChange={setValue} />
+  }
+  render(
+    <ThemeProvider>
+      <Harness />
+    </ThemeProvider>,
+  )
 }
 
 describe('PokemonFilters', () => {
-  it('emits the species substring as it is typed', async () => {
+  it('searches by species name from the search popover', async () => {
     const { latest } = renderFilters()
-    await userEvent.type(screen.getByLabelText(/^species/i), 'char')
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }))
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: /search/i }),
+      'char',
+    )
     expect(latest()?.filter.species).toBe('char')
   })
 
-  it('offers all 18 types and emits the chosen one', async () => {
-    const { latest } = renderFilters()
-    await openCombobox(/^type/i)
+  it('offers types and flags under group headings with a divider', async () => {
+    renderFilters()
+    await userEvent.click(screen.getByRole('button', { name: 'Filter' }))
+    const combo = await screen.findByRole('combobox', { name: /filter/i })
+    await userEvent.click(combo)
+    await userEvent.keyboard('{ArrowDown}')
     expect(
       await screen.findByRole('option', { name: 'Grass' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Fire' })).toBeInTheDocument()
-    expect(screen.getAllByRole('option')).toHaveLength(18)
-    await userEvent.click(screen.getByRole('option', { name: 'Grass' }))
-    expect(latest()?.filter.type).toBe('Grass')
+    expect(screen.getByRole('option', { name: 'Shiny' })).toBeInTheDocument()
+    // Grouped: Types / Flags headings, with a divider between them.
+    expect(screen.getByText('Types')).toBeInTheDocument()
+    expect(screen.getByText('Flags')).toBeInTheDocument()
+    expect(screen.getByRole('separator')).toBeInTheDocument()
+    // 18 types + 5 flags
+    expect(screen.getAllByRole('option')).toHaveLength(23)
   })
 
-  it('emits the set of selected flags', async () => {
+  it('filters by a combination of a type and a flag', async () => {
     const { latest } = renderFilters()
-    await openCombobox(/^flags/i)
+    await userEvent.click(screen.getByRole('button', { name: 'Filter' }))
+    const combo = await screen.findByRole('combobox', { name: /filter/i })
+    await userEvent.click(combo)
+    await userEvent.keyboard('{ArrowDown}')
+    await userEvent.click(await screen.findByRole('option', { name: 'Grass' }))
     await userEvent.click(await screen.findByRole('option', { name: 'Shiny' }))
-    await openCombobox(/^flags/i)
-    await userEvent.click(await screen.findByRole('option', { name: 'Lucky' }))
-    expect(latest()?.filter.flags).toEqual(
-      expect.arrayContaining(['shiny', 'lucky']),
-    )
-    expect(latest()?.filter.flags).toHaveLength(2)
+    expect(latest()?.filter.types).toEqual(['Grass'])
+    expect(latest()?.filter.flags).toEqual(['shiny'])
   })
 
-  it('emits the sort key and direction', async () => {
+  it('sorts by a combined key+direction option', async () => {
     const { latest } = renderFilters()
-    await openCombobox(/sort by/i)
-    await userEvent.click(await screen.findByRole('option', { name: 'CP' }))
-    expect(latest()?.sort.key).toBe('cp')
-
-    await userEvent.click(screen.getByRole('radio', { name: /desc/i }))
-    expect(latest()?.sort.direction).toBe('desc')
+    await userEvent.click(screen.getByRole('button', { name: 'Sort' }))
+    const combo = await screen.findByRole('combobox', { name: /sort by/i })
+    await userEvent.click(combo)
+    await userEvent.keyboard('{ArrowDown}')
+    await userEvent.click(
+      await screen.findByRole('option', { name: 'CP Desc' }),
+    )
+    expect(latest()?.sort).toEqual({ key: 'cp', direction: 'desc' })
   })
+})
 
-  it('shows the active filters', () => {
-    renderFilters({
-      filter: { species: 'Venu', type: 'Grass', flags: ['shiny'] },
+describe('PokemonFilterSummary', () => {
+  it('shows active search and filters as chips, plus the sort', () => {
+    renderSummary({
+      filter: { species: 'venu', types: ['Grass'], flags: ['shiny'] },
       sort: { key: 'cp', direction: 'desc' },
     })
-    expect(screen.getByLabelText(/^species/i)).toHaveValue('Venu')
-    // The selected flag surfaces as a removable tag — i.e. a "Shiny" outside the (hidden) option list.
-    const shinyTag = screen
-      .getAllByText('Shiny')
-      .find((el) => !el.closest('[role="option"]'))
-    expect(shinyTag).toBeDefined()
+    expect(screen.getByText(/Search: venu/)).toBeInTheDocument()
+    expect(screen.getByText('Grass')).toBeInTheDocument()
+    expect(screen.getByText('Shiny')).toBeInTheDocument()
+    expect(screen.getByText('Sorted by CP Desc')).toBeInTheDocument()
+  })
+
+  it('removes a single filter from its chip in one click', async () => {
+    renderSummary({
+      filter: { species: 'venu', types: ['Grass'] },
+      sort: { key: 'name', direction: 'asc' },
+    })
+    await userEvent.click(screen.getByRole('button', { name: /remove grass/i }))
+    expect(screen.queryByText('Grass')).not.toBeInTheDocument()
+    // The search chip is untouched.
+    expect(screen.getByText(/Search: venu/)).toBeInTheDocument()
+  })
+
+  it('clears the search and every filter with Clear all, keeping the sort', async () => {
+    renderSummary({
+      filter: { species: 'venu', types: ['Grass'] },
+      sort: { key: 'name', direction: 'asc' },
+    })
+    await userEvent.click(screen.getByRole('button', { name: /clear all/i }))
+    expect(screen.queryByText('Grass')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Search:/)).not.toBeInTheDocument()
+    expect(screen.getByText('Sorted by Name Asc')).toBeInTheDocument()
+  })
+
+  it('shows just the sort when nothing is filtered', () => {
+    renderSummary(INITIAL)
+    expect(screen.getByText('Sorted by Name Asc')).toBeInTheDocument()
   })
 })

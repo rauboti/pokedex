@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Pokemon, Species } from '@/api/schemas'
-import { filterPokemon } from './filterPokemon'
+import { filterPokemon, hasActiveFilters } from './filterPokemon'
 
 // --- Fixtures --------------------------------------------------------------
 
@@ -69,7 +69,7 @@ describe('species substring', () => {
   })
 })
 
-// --- Type membership (incl. dual-types) ------------------------------------
+// --- Type membership (multi, OR; incl. dual-types) -------------------------
 
 describe('type membership', () => {
   const venusaur = mk({ species: species({ types: ['Grass', 'Poison'] }) })
@@ -79,20 +79,27 @@ describe('type membership', () => {
   const list = [venusaur, charmander]
 
   it('matches the primary type', () => {
-    expect(filterPokemon(list, { type: 'Grass' })).toEqual([venusaur])
+    expect(filterPokemon(list, { types: ['Grass'] })).toEqual([venusaur])
   })
 
   it('matches the secondary type of a dual-typed species', () => {
-    expect(filterPokemon(list, { type: 'Poison' })).toEqual([venusaur])
+    expect(filterPokemon(list, { types: ['Poison'] })).toEqual([venusaur])
+  })
+
+  it('matches any of several types (OR)', () => {
+    expect(filterPokemon(list, { types: ['Fire', 'Water'] })).toEqual([
+      charmander,
+    ])
+    expect(filterPokemon(list, { types: ['Grass', 'Fire'] })).toEqual(list)
   })
 
   it('matches case-insensitively and excludes non-members', () => {
-    expect(filterPokemon(list, { type: 'fire' })).toEqual([charmander])
-    expect(filterPokemon(list, { type: 'Water' })).toEqual([])
+    expect(filterPokemon(list, { types: ['fire'] })).toEqual([charmander])
+    expect(filterPokemon(list, { types: ['Water'] })).toEqual([])
   })
 
-  it('imposes no constraint for an empty type', () => {
-    expect(filterPokemon(list, { type: '' })).toEqual(list)
+  it('imposes no constraint for an empty type list', () => {
+    expect(filterPokemon(list, { types: [] })).toEqual(list)
   })
 })
 
@@ -201,7 +208,7 @@ describe('composability', () => {
     expect(
       filterPokemon(list, {
         species: 'venu',
-        type: 'Grass',
+        types: ['Grass'],
         flags: ['shiny'],
         stale: true,
       }),
@@ -213,5 +220,22 @@ describe('composability', () => {
     const result = filterPokemon(list, {})
     expect(result).toEqual(list)
     expect(result).not.toBe(list)
+  })
+})
+
+// --- hasActiveFilters ------------------------------------------------------
+
+describe('hasActiveFilters', () => {
+  it('is false for an empty (or whitespace-only) filter', () => {
+    expect(hasActiveFilters({})).toBe(false)
+    expect(hasActiveFilters({ species: '  ' })).toBe(false)
+    expect(hasActiveFilters({ types: [], flags: [] })).toBe(false)
+  })
+
+  it('is true when any constraint is set', () => {
+    expect(hasActiveFilters({ species: 'x' })).toBe(true)
+    expect(hasActiveFilters({ types: ['Grass'] })).toBe(true)
+    expect(hasActiveFilters({ flags: ['shiny'] })).toBe(true)
+    expect(hasActiveFilters({ stale: true })).toBe(true)
   })
 })
