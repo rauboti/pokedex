@@ -1,4 +1,4 @@
-import { HStack, Stack, Text } from '@chakra-ui/react'
+import { Center, HStack, Stack, Text } from '@chakra-ui/react'
 import {
   Badge,
   Button,
@@ -9,18 +9,20 @@ import {
   TrashIcon,
 } from '@rauboti/ui'
 import type { Pokemon } from '@/api/schemas'
-import { FlagBadges } from './FlagBadges'
+import { PokemonAttributes } from './PokemonAttributes'
 import { PokemonSprite } from './PokemonSprite'
 import { TypeBadge } from './TypeBadge'
 
 /**
- * The collection grid (US1/US2, FR-010). A responsive @rauboti/ui `Grid` of `Card`s — one card per
- * Pokémon, reflowing to more columns as the viewport widens so a large collection scrolls less. Each
- * card shows the species name+form, its types, and the server-derived level / CP / IV% read straight
- * from the DTO — the web app does no stat math (research D7). A rebalanced (`stale`) row wears a
- * "re-check" badge (FR-013 groundwork; the re-enter flow lands with T023). Kept as a `ul`/`li` list
- * for semantics; cards are presentational here (opening a card to the detail view lands with US3,
- * T025).
+ * The collection grid (US1/US2, FR-010). A responsive @rauboti/ui `Grid` of `Card`s — up to four
+ * columns at the widest, reflowing to fewer as the viewport narrows; `autoFill` keeps empty tracks so
+ * a lone card holds its column width instead of stretching. Each card is a vertical stack: **name +
+ * types**, the centred **sprite** (larger on wide screens), the **CP** on its own, **HP · Level**, a
+ * fixed-height **attributes** row ([PokemonAttributes] — Shiny/Shadow/Lucky/Best Buddy glyphs), then
+ * **IV% + the edit/delete actions** — all server-derived values read straight from the DTO (the web
+ * app does no stat math, research D7). A rebalanced (`stale`) row wears a "re-check" badge (FR-013);
+ * its edit action reads "Re-enter". Kept as a `ul`/`li` list for semantics; cards are presentational
+ * here (opening a card to the detail view lands with US3, T025).
  *
  * When the list is empty it renders one of two empty states: `filtered` distinguishes "your filters
  * match nothing" from "you have registered nothing yet". `onEdit`/`onDelete` add per-card actions; a
@@ -55,57 +57,73 @@ export const PokemonList = ({
   }
 
   return (
-    <Grid as="ul">
+    <Grid as="ul" autoFill minChildWidth="13rem">
       {pokemon.map((p) => (
         <Card as="li" key={p.id}>
           <Stack gap="2">
-            <HStack gap="3" align="start">
-              <PokemonSprite pokemon={p} />
-              <Stack gap="2" flex="1" minW="0">
-                <HStack justify="space-between" wrap="wrap" gap="2">
-                  <HStack gap="2" wrap="wrap">
-                    <Text fontWeight="semibold">{displayName(p.species)}</Text>
-                    {p.stale && <Badge type="warning">Needs re-check</Badge>}
-                  </HStack>
-                  <HStack gap="2">
-                    {p.species.types.map((type) => (
-                      <TypeBadge key={type} type={type} />
-                    ))}
-                  </HStack>
-                </HStack>
-                <HStack gap="4" wrap="wrap" color="text.muted" fontSize="sm">
-                  <Text>Level {p.derived.level}</Text>
-                  <Text>CP {p.cp}</Text>
-                  <Text>{p.derived.ivPercent}%</Text>
-                </HStack>
-              </Stack>
-            </HStack>
-            <FlagBadges flags={p.flags} />
-            {(onEdit || onDelete) && (
-              <HStack gap="1" justify="end">
-                {onEdit && (
-                  <Button
-                    size="sm"
-                    variant={p.stale ? 'solid' : 'ghost'}
-                    colorPalette={p.stale ? 'orange' : undefined}
-                    aria-label={p.stale ? 'Re-enter' : 'Edit'}
-                    onClick={() => onEdit(p)}
-                  >
-                    <PencilIcon size={16} />
-                  </Button>
-                )}
-                {onDelete && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label="Delete"
-                    onClick={() => onDelete(p)}
-                  >
-                    <TrashIcon size={16} />
-                  </Button>
-                )}
+            {/* Row 1: name (left) + types (right) */}
+            <HStack justify="space-between" wrap="wrap" gap="2">
+              <HStack gap="2" wrap="wrap" minW="0">
+                <Text fontWeight="semibold">{displayName(p.species)}</Text>
+                {p.stale && <Badge type="warning">Needs re-check</Badge>}
               </HStack>
-            )}
+              <HStack gap="1">
+                {p.species.types.map((type) => (
+                  <TypeBadge key={type} type={type} />
+                ))}
+              </HStack>
+            </HStack>
+
+            {/* Sprite, centred (larger on wide screens) */}
+            <Center minH={{ base: '16', lg: '24' }}>
+              <PokemonSprite pokemon={p} size={{ base: '16', lg: '24' }} />
+            </Center>
+
+            {/* CP alone, centred */}
+            <Text textAlign="center" fontWeight="medium">
+              CP {p.cp}
+            </Text>
+
+            {/* HP · Level */}
+            <HStack justify="center" gap="4" color="text.muted" fontSize="sm">
+              <Text>HP {p.derived.hp}</Text>
+              <Text>Level {p.derived.level}</Text>
+            </HStack>
+
+            {/* Attributes (Shiny/Shadow/Lucky/Best Buddy) — fixed height, so cards align */}
+            <PokemonAttributes flags={p.flags} rarity={p.species.rarity} />
+
+            {/* IV% (left) + actions (right) */}
+            <HStack justify="space-between" align="center">
+              <Text color="text.muted" fontSize="sm">
+                IV {p.derived.ivPercent}%
+              </Text>
+              {(onEdit || onDelete) && (
+                <HStack gap="1">
+                  {onEdit && (
+                    <Button
+                      size="sm"
+                      variant={p.stale ? 'solid' : 'ghost'}
+                      colorPalette={p.stale ? 'orange' : undefined}
+                      aria-label={p.stale ? 'Re-enter' : 'Edit'}
+                      onClick={() => onEdit(p)}
+                    >
+                      <PencilIcon size={16} />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label="Delete"
+                      onClick={() => onDelete(p)}
+                    >
+                      <TrashIcon size={16} />
+                    </Button>
+                  )}
+                </HStack>
+              )}
+            </HStack>
           </Stack>
         </Card>
       ))}

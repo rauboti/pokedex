@@ -4,6 +4,7 @@
     "formId": "VENUSAUR",
     "dexNr": 3,
     "names": { "English": "Venusaur" },
+    "pokemonClass": "POKEMON_CLASS_LEGENDARY",
     "assets": {
       "image": "https://example.test/assets/Pokemon/pm3.icon.png",
       "shinyImage": "https://example.test/assets/Pokemon/pm3.s.icon.png"
@@ -146,6 +147,7 @@
     "formId": "CHARMANDER",
     "dexNr": 4,
     "names": { "English": "Charmander" },
+    "pokemonClass": "POKEMON_CLASS_ULTRA_BEAST",
     "stats": { "stamina": 118, "attack": 116, "defense": 93 },
     "primaryType": { "type": "POKEMON_TYPE_FIRE", "names": { "English": "Fire" } },
     "secondaryType": null,

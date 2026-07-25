@@ -27,7 +27,7 @@ class SpeciesApiTest : IntegrationTest() {
     @BeforeEach
     fun seed() {
         jdbc.sql("truncate table caught_pokemon, species_move, species, move").update()
-        insert("VENUSAUR", 3, "Venusaur", null, "Grass", "Poison", true)
+        insert("VENUSAUR", 3, "Venusaur", null, "Grass", "Poison", true, rarity = "Legendary")
         insert("VENUSAUR_MEGA", 3, "Venusaur", "Mega", "Grass", "Poison", false)
         insert("CHARMANDER", 4, "Charmander", null, "Fire", null, true)
     }
@@ -40,13 +40,14 @@ class SpeciesApiTest : IntegrationTest() {
         type1: String,
         type2: String?,
         registrable: Boolean,
+        rarity: String? = null,
     ) {
         jdbc
             .sql(
                 """
                 insert into species (id, dex_nr, name, form, base_atk, base_def, base_sta,
-                                     type_1, type_2, registrable, image_url, shiny_image_url, synced_at)
-                values (:id, :dex, :name, :form, 198, 189, 190, :t1, :t2, :reg, :img, :shiny, now())
+                                     type_1, type_2, registrable, image_url, shiny_image_url, rarity, synced_at)
+                values (:id, :dex, :name, :form, 198, 189, 190, :t1, :t2, :reg, :img, :shiny, :rarity, now())
                 """.trimIndent(),
             ).param("id", id)
             .param("dex", dexNr)
@@ -57,6 +58,7 @@ class SpeciesApiTest : IntegrationTest() {
             .param("reg", registrable)
             .param("img", "https://example.test/$id.png")
             .param("shiny", "https://example.test/$id.s.png")
+            .param("rarity", rarity)
             .update()
     }
 
@@ -87,6 +89,22 @@ class SpeciesApiTest : IntegrationTest() {
                 status { isOk() }
                 jsonPath("$[0].imageUrl") { value("https://example.test/VENUSAUR.png") }
                 jsonPath("$[0].shinyImageUrl") { value("https://example.test/VENUSAUR.s.png") }
+            }
+    }
+
+    @Test
+    fun `exposes the synced rarity, null for an ordinary species`() {
+        mvc
+            .get("/api/species?q=venusaur") { with(user("user")) }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$[0].rarity") { value("Legendary") }
+            }
+        mvc
+            .get("/api/species?q=charmander") { with(user("user")) }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$[0].rarity") { value(null as String?) }
             }
     }
 

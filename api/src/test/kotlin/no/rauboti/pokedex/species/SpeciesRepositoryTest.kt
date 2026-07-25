@@ -31,13 +31,14 @@ class SpeciesRepositoryTest : IntegrationTest() {
         type1: String,
         type2: String?,
         registrable: Boolean = true,
+        rarity: String? = null,
     ) {
         jdbc
             .sql(
                 """
                 insert into species (id, dex_nr, name, form, base_atk, base_def, base_sta,
-                                     type_1, type_2, registrable, synced_at)
-                values (:id, :dex, :name, :form, 100, 100, 100, :t1, :t2, :reg, now())
+                                     type_1, type_2, registrable, rarity, synced_at)
+                values (:id, :dex, :name, :form, 100, 100, 100, :t1, :t2, :reg, :rarity, now())
                 """.trimIndent(),
             ).param("id", id)
             .param("dex", dexNr)
@@ -46,6 +47,7 @@ class SpeciesRepositoryTest : IntegrationTest() {
             .param("t1", type1)
             .param("t2", type2)
             .param("reg", registrable)
+            .param("rarity", rarity)
             .update()
     }
 
@@ -95,5 +97,14 @@ class SpeciesRepositoryTest : IntegrationTest() {
 
         assertThat(species.search("venusaur", 20).single().types).containsExactly("Grass", "Poison")
         assertThat(species.search("charmander", 20).single().types).containsExactly("Fire")
+    }
+
+    @Test
+    fun `carries the synced rarity, null for an ordinary species`() {
+        seed("MEWTWO", 150, "Mewtwo", null, "Psychic", null, rarity = "Legendary")
+        seed("CHARMANDER", 4, "Charmander", null, "Fire", null)
+
+        assertThat(species.search("mewtwo", 20).single().rarity).isEqualTo("Legendary")
+        assertThat(species.search("charmander", 20).single().rarity).isNull()
     }
 }

@@ -267,6 +267,7 @@ components:
         baseSta: { type: integer }
         imageUrl: { type: [string, "null"], description: "Synced sprite URL; null when the feed ships none for a form" }
         shinyImageUrl: { type: [string, "null"], description: "Synced shiny-sprite URL; null when absent" }
+        rarity: { type: [string, "null"], description: "Synced class from the feed's pokemonClass (Legendary/Mythic/Ultra Beast); null for an ordinary species" }
         syncedAt: { type: string, format: date-time }
       required: [id, dexNr, name, form, types, baseAtk, baseDef, baseSta, syncedAt]
 

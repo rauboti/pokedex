@@ -76,13 +76,14 @@ describe('CollectionPage', () => {
     expect(await screen.findByText(/Rattata \(Alola\)/i)).toBeInTheDocument()
     expect(screen.getByText(/level 25\b/i)).toBeInTheDocument()
     expect(screen.getByText(/\bCP 844\b/i)).toBeInTheDocument()
+    expect(screen.getByText(/\bHP 120\b/i)).toBeInTheDocument()
     expect(screen.getByText(/93\.3%/)).toBeInTheDocument()
     // Types are icon-only badges — their accessible name is the type.
     expect(screen.getByRole('img', { name: 'Dark' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Normal' })).toBeInTheDocument()
-    // The flag badge lives on the card (scoped, so it isn't confused with the filter bar's flag option).
+    // Catch attributes render as icons (accessible name = the attribute), on the card.
     expect(
-      within(screen.getByRole('listitem')).getByText('Shiny'),
+      within(screen.getByRole('listitem')).getByRole('img', { name: 'Shiny' }),
     ).toBeInTheDocument()
   })
 

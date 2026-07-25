@@ -44,6 +44,7 @@ create table species (
     recommended_charged_move_id text        references move (id),
     image_url                   text,
     shiny_image_url             text,
+    rarity                      text,
     synced_at                   timestamptz not null,
 
     constraint species_base_atk_check check (base_atk > 0),

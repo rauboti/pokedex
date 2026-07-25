@@ -90,6 +90,7 @@ class GamedataNormalizer {
                 registrable = registrable,
                 imageUrl = node.at("/assets/image").asTextOrNull(),
                 shinyImageUrl = node.at("/assets/shinyImage").asTextOrNull(),
+                rarity = node.at("/pokemonClass").asTextOrNull()?.let(::canonicalRarity),
             ),
         )
 
@@ -128,6 +129,14 @@ class GamedataNormalizer {
             .removePrefix("POKEMON_TYPE_")
             .lowercase()
             .replaceFirstChar { it.uppercase() }
+
+    /** `POKEMON_CLASS_LEGENDARY` → `Legendary`, `POKEMON_CLASS_ULTRA_BEAST` → `Ultra Beast`; blank → null. */
+    private fun canonicalRarity(raw: String): String? =
+        raw
+            .removePrefix("POKEMON_CLASS_")
+            .takeIf { it.isNotBlank() }
+            ?.split("_")
+            ?.joinToString(" ") { it.lowercase().replaceFirstChar { c -> c.uppercase() } }
 
     /**
      * The human-readable form label from the id suffix relative to the base: `RATTATA_ALOLA` vs base
