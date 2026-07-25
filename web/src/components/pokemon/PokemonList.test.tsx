@@ -1,0 +1,96 @@
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { ThemeProvider } from '@rauboti/ui'
+import { PokemonList } from './PokemonList'
+import type { Pokemon, Species } from '@/api/schemas'
+
+/**
+ * Presentation of the collection grid (US2 additions): type badges per row, the FR-013 stale
+ * "re-check" badge, and the two empty states — nothing registered vs. filters matching nothing.
+ * Filtering/sorting itself is the pure `lib/` concern (T021); this only renders what it is handed.
+ */
+
+const species = (over: Partial<Species> = {}): Species => ({
+  id: 'VENUSAUR',
+  dexNr: 3,
+  name: 'Venusaur',
+  form: null,
+  types: ['Grass', 'Poison'],
+  baseAtk: 198,
+  baseDef: 189,
+  baseSta: 190,
+  imageUrl: null,
+  shinyImageUrl: null,
+  syncedAt: '2026-07-21T09:00:00Z',
+  ...over,
+})
+
+let seq = 0
+const mk = (over: Partial<Pokemon> = {}): Pokemon => ({
+  id: `p${seq++}`,
+  species: species(),
+  ivAtk: 15,
+  ivDef: 15,
+  ivSta: 15,
+  cp: 2000,
+  flags: {
+    shiny: false,
+    shadow: false,
+    lucky: false,
+    purified: false,
+    bestBuddy: false,
+  },
+  moves: { fast: null, charged1: null, charged2: null },
+  derived: {
+    level: 25,
+    hp: 150,
+    attack: 160,
+    defense: 150,
+    stamina: 150,
+    ivPercent: 100,
+    perfect: true,
+    projections: [],
+  },
+  stale: false,
+  caughtAt: '2026-07-10',
+  createdAt: '2026-07-10T18:00:00Z',
+  ...over,
+})
+
+const renderList = (props: Parameters<typeof PokemonList>[0]) =>
+  render(
+    <ThemeProvider>
+      <PokemonList {...props} />
+    </ThemeProvider>,
+  )
+
+describe('PokemonList', () => {
+  it('renders a row with its type badges (icon accessible name = type)', () => {
+    renderList({
+      pokemon: [mk({ species: species({ types: ['Grass', 'Poison'] }) })],
+    })
+    expect(screen.getByRole('img', { name: 'Grass' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Poison' })).toBeInTheDocument()
+  })
+
+  it('flags a stale row with a re-check badge', () => {
+    renderList({ pokemon: [mk({ stale: true })] })
+    expect(screen.getByText(/re-check/i)).toBeInTheDocument()
+  })
+
+  it('shows no re-check badge on a fresh row', () => {
+    renderList({ pokemon: [mk({ stale: false })] })
+    expect(screen.queryByText(/re-check/i)).not.toBeInTheDocument()
+  })
+
+  it('shows the collection-empty state when there is nothing and no filters are active', () => {
+    renderList({ pokemon: [] })
+    expect(screen.getByText(/no pokémon registered yet/i)).toBeInTheDocument()
+  })
+
+  it('shows a no-matches state when active filters exclude everything', () => {
+    renderList({ pokemon: [], filtered: true })
+    expect(screen.getByText(/no pokémon match/i)).toBeInTheDocument()
+    expect(screen.queryByText(/registered yet/i)).not.toBeInTheDocument()
+  })
+})
