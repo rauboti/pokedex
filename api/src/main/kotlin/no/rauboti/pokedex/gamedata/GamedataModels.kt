@@ -27,6 +27,8 @@ data class NormalizedSpecies(
     val registrable: Boolean,
     val imageUrl: String?,
     val shinyImageUrl: String?,
+    /** Rarity/class from the feed's `pokemonClass` ("Legendary"/"Mythic"/"Ultra Beast"), or null. */
+    val rarity: String?,
 )
 
 /** One fast/charged move row (data-model `move`). */

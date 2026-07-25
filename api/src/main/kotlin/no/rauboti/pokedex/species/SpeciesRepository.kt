@@ -23,7 +23,7 @@ class SpeciesRepository(
             .sql(
                 """
                 SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2,
-                       image_url, shiny_image_url, synced_at
+                       image_url, shiny_image_url, rarity, synced_at
                 FROM species
                 WHERE registrable = true
                   AND position(lower(:q) in lower(name)) > 0
@@ -45,7 +45,7 @@ class SpeciesRepository(
             .sql(
                 """
                 SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2,
-                       image_url, shiny_image_url, synced_at
+                       image_url, shiny_image_url, rarity, synced_at
                 FROM species
                 WHERE id = :id
                 """.trimIndent(),
@@ -61,7 +61,7 @@ class SpeciesRepository(
             .sql(
                 """
                 SELECT id, dex_nr, name, form, base_atk, base_def, base_sta, type_1, type_2,
-                       image_url, shiny_image_url, synced_at
+                       image_url, shiny_image_url, rarity, synced_at
                 FROM species
                 WHERE id IN (:ids)
                 """.trimIndent(),
@@ -91,6 +91,7 @@ class SpeciesRepository(
             baseSta = rs.getInt("base_sta"),
             imageUrl = rs.getString("image_url"),
             shinyImageUrl = rs.getString("shiny_image_url"),
+            rarity = rs.getString("rarity"),
             syncedAt = rs.getTimestamp("synced_at").toInstant(),
         )
 }

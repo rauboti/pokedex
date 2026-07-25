@@ -73,6 +73,15 @@ class GamedataNormalizerTest {
     }
 
     @Test
+    fun `canonicalizes the feed's pokemonClass into a rarity label, null when absent`() {
+        assertThat(species("VENUSAUR").rarity).isEqualTo("Legendary")
+        // Multi-word classes title-case each word: POKEMON_CLASS_ULTRA_BEAST → "Ultra Beast".
+        assertThat(species("CHARMANDER").rarity).isEqualTo("Ultra Beast")
+        // RATTATA has no pokemonClass → an ordinary species.
+        assertThat(species("RATTATA").rarity).isNull()
+    }
+
+    @Test
     fun `skips malformed species without failing the feed`() {
         // BROKEN_SPECIES has no stats; the rest still normalize.
         assertThat(catalog.species.map { it.id })

@@ -113,7 +113,10 @@ describe('RegisterDialog', () => {
 
     // Values come straight from the derivation endpoint (mock: level 20, hp 120, atk 130.5…).
     expect(await screen.findByText(/level 20\b/i)).toBeInTheDocument()
-    expect(screen.getByText(/^hp 120$/i)).toBeInTheDocument() // HP
+    // Effective stats render to 2 decimals (attack 130.5 → 130.50, stamina 150 → 150.00).
+    expect(screen.getByText(/^attack 130\.50$/i)).toBeInTheDocument()
+    expect(screen.getByText(/^stamina 150\.00$/i)).toBeInTheDocument()
+    expect(screen.getByText(/^hp 120$/i)).toBeInTheDocument() // HP (no decimals)
     expect(screen.getByText(/100(\.0)?%/)).toBeInTheDocument() // IV%
     expect(screen.getByRole('button', { name: /^save/i })).toBeEnabled()
   })

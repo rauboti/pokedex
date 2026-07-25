@@ -78,6 +78,46 @@ describe('PokemonList', () => {
     expect(screen.getByText(/re-check/i)).toBeInTheDocument()
   })
 
+  it('shows an icon for each active catch attribute (and none for the others)', () => {
+    renderList({
+      pokemon: [
+        mk({
+          flags: {
+            shiny: true,
+            shadow: false,
+            lucky: true,
+            purified: false,
+            bestBuddy: false,
+          },
+        }),
+      ],
+    })
+    expect(screen.getByRole('img', { name: 'Shiny' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Lucky' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('img', { name: 'Best Buddy' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows a rarity icon from the species (and none for an ordinary species)', () => {
+    renderList({
+      pokemon: [mk({ species: species({ rarity: 'Legendary' }) })],
+    })
+    expect(screen.getByRole('img', { name: 'Legendary' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('img', { name: 'Mythic' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows no rarity icon for an unmapped rarity', () => {
+    renderList({
+      pokemon: [mk({ species: species({ rarity: 'Ultra Beast' }) })],
+    })
+    expect(
+      screen.queryByRole('img', { name: 'Ultra Beast' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('shows no re-check badge on a fresh row', () => {
     renderList({ pokemon: [mk({ stale: false })] })
     expect(screen.queryByText(/re-check/i)).not.toBeInTheDocument()

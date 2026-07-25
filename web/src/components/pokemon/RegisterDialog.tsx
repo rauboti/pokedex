@@ -313,11 +313,15 @@ export const RegisterDialog = ({
           <Card>
             <Stack gap="1">
               <Text fontWeight="semibold">Level {selectedCandidate.level}</Text>
-              <Text>HP {selectedCandidate.hp}</Text>
-              <Text>Attack {selectedCandidate.attack}</Text>
-              <Text>Defense {selectedCandidate.defense}</Text>
-              <Text>Stamina {selectedCandidate.stamina}</Text>
-              <Text>IV {ivPercent}%</Text>
+              <HStack gap="4" wrap="wrap">
+                <Text>Attack {selectedCandidate.attack.toFixed(2)}</Text>
+                <Text>Defense {selectedCandidate.defense.toFixed(2)}</Text>
+                <Text>Stamina {selectedCandidate.stamina.toFixed(2)}</Text>
+              </HStack>
+              <HStack gap="4" wrap="wrap">
+                <Text>HP {selectedCandidate.hp}</Text>
+                <Text>IV {ivPercent}%</Text>
+              </HStack>
             </Stack>
           </Card>
         )}

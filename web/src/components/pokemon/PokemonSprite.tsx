@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Image } from '@chakra-ui/react'
+import type { ImageProps } from '@chakra-ui/react'
 import type { Pokemon } from '@/api/schemas'
 
 /**
@@ -13,7 +14,8 @@ export const PokemonSprite = ({
   size = '16',
 }: {
   pokemon: Pokemon
-  size?: string
+  /** Chakra `boxSize` (default `'16'`); accepts a responsive value to grow on wider screens. */
+  size?: ImageProps['boxSize']
 }) => {
   const [failed, setFailed] = useState(false)
   const { species, flags } = pokemon

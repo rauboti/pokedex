@@ -23,6 +23,7 @@ export const speciesSchema = z.object({
   baseSta: z.number(),
   imageUrl: z.string().nullable().optional(),
   shinyImageUrl: z.string().nullable().optional(),
+  rarity: z.string().nullable().optional(),
   syncedAt: z.string(),
 })
 export type Species = z.infer<typeof speciesSchema>
