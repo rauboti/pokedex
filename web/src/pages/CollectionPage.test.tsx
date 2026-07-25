@@ -77,7 +77,8 @@ describe('CollectionPage', () => {
     expect(screen.getByText(/level 25\b/i)).toBeInTheDocument()
     expect(screen.getByText(/\bCP 844\b/i)).toBeInTheDocument()
     expect(screen.getByText(/\bHP 120\b/i)).toBeInTheDocument()
-    expect(screen.getByText(/93\.3%/)).toBeInTheDocument()
+    // IV quality shows as a Pokémon GO-style star rating; the exact % is the group's label.
+    expect(screen.getByLabelText('IV 93.3%')).toBeInTheDocument()
     // Types are icon-only badges — their accessible name is the type.
     expect(screen.getByRole('img', { name: 'Dark' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Normal' })).toBeInTheDocument()
