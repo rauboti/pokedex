@@ -9,6 +9,7 @@ import {
   TrashIcon,
 } from '@rauboti/ui'
 import type { Pokemon } from '@/api/schemas'
+import { IvStars } from './IvStars'
 import { PokemonAttributes } from './PokemonAttributes'
 import { PokemonSprite } from './PokemonSprite'
 import { TypeBadge } from './TypeBadge'
@@ -19,10 +20,11 @@ import { TypeBadge } from './TypeBadge'
  * a lone card holds its column width instead of stretching. Each card is a vertical stack: **name +
  * types**, the centred **sprite** (larger on wide screens), the **CP** on its own, **HP · Level**, a
  * fixed-height **attributes** row ([PokemonAttributes] — Shiny/Shadow/Lucky/Best Buddy glyphs), then
- * **IV% + the edit/delete actions** — all server-derived values read straight from the DTO (the web
- * app does no stat math, research D7). A rebalanced (`stale`) row wears a "re-check" badge (FR-013);
- * its edit action reads "Re-enter". Kept as a `ul`/`li` list for semantics; cards are presentational
- * here (opening a card to the detail view lands with US3, T025).
+ * **the IV star rating + the edit/delete actions** — all server-derived values read straight from the
+ * DTO (the web app does no stat math, research D7). IV quality shows as a Pokémon GO-style star rating
+ * ([IvStars] — yellow stars by band, one pink star for a perfect catch, US3) rather than a raw number.
+ * A rebalanced (`stale`) row wears a "re-check" badge (FR-013) and its edit action reads "Re-enter".
+ * Kept as a `ul`/`li` list for semantics; cards are presentational here (detail view lands US3, T025).
  *
  * When the list is empty it renders one of two empty states: `filtered` distinguishes "your filters
  * match nothing" from "you have registered nothing yet". `onEdit`/`onDelete` add per-card actions; a
@@ -93,11 +95,12 @@ export const PokemonList = ({
             {/* Attributes (Shiny/Shadow/Lucky/Best Buddy) — fixed height, so cards align */}
             <PokemonAttributes flags={p.flags} rarity={p.species.rarity} />
 
-            {/* IV% (left) + actions (right) */}
+            {/* IV star rating (left) + actions (right) */}
             <HStack justify="space-between" align="center">
-              <Text color="text.muted" fontSize="sm">
-                IV {p.derived.ivPercent}%
-              </Text>
+              <IvStars
+                ivPercent={p.derived.ivPercent}
+                perfect={p.derived.perfect}
+              />
               {(onEdit || onDelete) && (
                 <HStack gap="1">
                   {onEdit && (

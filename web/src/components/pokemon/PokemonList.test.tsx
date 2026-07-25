@@ -118,6 +118,50 @@ describe('PokemonList', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('shows four pink stars for a hundo (perfect IV)', () => {
+    renderList({
+      pokemon: [
+        mk({ derived: { ...mk().derived, ivPercent: 100, perfect: true } }),
+      ],
+    })
+    const rating = screen.getByLabelText('IV 100%')
+    expect(rating.querySelectorAll('[data-star="pink"]')).toHaveLength(4)
+    expect(rating.querySelectorAll('[data-star="yellow"]')).toHaveLength(0)
+  })
+
+  it('shows yellow stars by IV band for a non-perfect row', () => {
+    renderList({
+      pokemon: [
+        mk({ derived: { ...mk().derived, ivPercent: 93.3, perfect: false } }),
+      ],
+    })
+    const rating = screen.getByLabelText('IV 93.3%')
+    // 93.3% → three yellow stars (75–99% band), no pink.
+    expect(rating.querySelectorAll('[data-star="yellow"]')).toHaveLength(3)
+    expect(rating.querySelectorAll('[data-star="pink"]')).toHaveLength(0)
+  })
+
+  it('scales the yellow-star count with the IV band', () => {
+    renderList({
+      pokemon: [
+        mk({
+          id: 'a',
+          derived: { ...mk().derived, ivPercent: 40, perfect: false },
+        }),
+        mk({
+          id: 'b',
+          derived: { ...mk().derived, ivPercent: 60, perfect: false },
+        }),
+      ],
+    })
+    expect(
+      screen.getByLabelText('IV 40%').querySelectorAll('[data-star="yellow"]'),
+    ).toHaveLength(1)
+    expect(
+      screen.getByLabelText('IV 60%').querySelectorAll('[data-star="yellow"]'),
+    ).toHaveLength(2)
+  })
+
   it('shows no re-check badge on a fresh row', () => {
     renderList({ pokemon: [mk({ stale: false })] })
     expect(screen.queryByText(/re-check/i)).not.toBeInTheDocument()
