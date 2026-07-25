@@ -1,5 +1,13 @@
 import { HStack, Stack, Text } from '@chakra-ui/react'
-import { Badge, Card, EmptyState, Grid } from '@rauboti/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Grid,
+  PencilIcon,
+  TrashIcon,
+} from '@rauboti/ui'
 import type { Pokemon } from '@/api/schemas'
 import { FlagBadges } from './FlagBadges'
 import { PokemonSprite } from './PokemonSprite'
@@ -15,7 +23,8 @@ import { TypeBadge } from './TypeBadge'
  * T025).
  *
  * When the list is empty it renders one of two empty states: `filtered` distinguishes "your filters
- * match nothing" from "you have registered nothing yet".
+ * match nothing" from "you have registered nothing yet". `onEdit`/`onDelete` add per-card actions; a
+ * stale row's edit is surfaced as a prominent "Re-enter" so the FR-013 re-check has an obvious path.
  */
 
 const displayName = (species: Pokemon['species']) =>
@@ -24,10 +33,16 @@ const displayName = (species: Pokemon['species']) =>
 export const PokemonList = ({
   pokemon,
   filtered = false,
+  onEdit,
+  onDelete,
 }: {
   pokemon: Pokemon[]
   /** True when a filter is active, so an empty result reads as "no matches" not "nothing yet". */
   filtered?: boolean
+  /** Open the edit flow for a row (also the stale "re-enter" path). Omitted → no edit action. */
+  onEdit?: (pokemon: Pokemon) => void
+  /** Delete a row (the page confirms first). Omitted → no delete action. */
+  onDelete?: (pokemon: Pokemon) => void
 }) => {
   if (pokemon.length === 0) {
     return (
@@ -66,6 +81,31 @@ export const PokemonList = ({
               </Stack>
             </HStack>
             <FlagBadges flags={p.flags} />
+            {(onEdit || onDelete) && (
+              <HStack gap="1" justify="end">
+                {onEdit && (
+                  <Button
+                    size="sm"
+                    variant={p.stale ? 'solid' : 'ghost'}
+                    colorPalette={p.stale ? 'orange' : undefined}
+                    aria-label={p.stale ? 'Re-enter' : 'Edit'}
+                    onClick={() => onEdit(p)}
+                  >
+                    <PencilIcon size={16} />
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label="Delete"
+                    onClick={() => onDelete(p)}
+                  >
+                    <TrashIcon size={16} />
+                  </Button>
+                )}
+              </HStack>
+            )}
           </Stack>
         </Card>
       ))}

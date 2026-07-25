@@ -17,9 +17,10 @@ export type PokemonFlag =
 export interface PokemonFilter {
   /** Case-insensitive substring over the species name (nicknames are unsupported — spec assumption). */
   species?: string
-  /** A type name that must appear among the species' 1–2 types (dual-types match on either). */
-  type?: string
-  /** Flags that must all be set. */
+  /** Type names to keep — a Pokémon matches if it has **any** of them (OR; dual-types match on
+   *  either). Empty/undefined imposes no constraint. */
+  types?: string[]
+  /** Flags that must **all** be set (AND). */
   flags?: PokemonFlag[]
   /** When set, keeps only rows whose stale state equals this (the FR-013 rescan badge). */
   stale?: boolean
@@ -30,9 +31,11 @@ const matchesSpecies = (p: Pokemon, query: string): boolean => {
   return q === '' || p.species.name.toLowerCase().includes(q)
 }
 
-const matchesType = (p: Pokemon, type: string): boolean =>
-  type === '' ||
-  p.species.types.some((t) => t.toLowerCase() === type.toLowerCase())
+const matchesTypes = (p: Pokemon, types: string[]): boolean =>
+  types.length === 0 ||
+  types.some((type) =>
+    p.species.types.some((t) => t.toLowerCase() === type.toLowerCase()),
+  )
 
 const hasFlags = (p: Pokemon, flags: PokemonFlag[]): boolean =>
   flags.every((f) => p.flags[f])
@@ -45,7 +48,15 @@ export const filterPokemon = (
   list.filter(
     (p) =>
       (filter.species === undefined || matchesSpecies(p, filter.species)) &&
-      (filter.type === undefined || matchesType(p, filter.type)) &&
+      (filter.types === undefined || matchesTypes(p, filter.types)) &&
       (filter.flags === undefined || hasFlags(p, filter.flags)) &&
       (filter.stale === undefined || p.stale === filter.stale),
   )
+
+/** True when any search/filter constraint is active (used to pick the right empty state; sort is
+ *  always set, so it isn't a constraint). */
+export const hasActiveFilters = (filter: PokemonFilter): boolean =>
+  !!filter.species?.trim() ||
+  (filter.types?.length ?? 0) > 0 ||
+  (filter.flags?.length ?? 0) > 0 ||
+  filter.stale !== undefined

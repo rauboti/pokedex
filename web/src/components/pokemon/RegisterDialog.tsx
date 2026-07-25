@@ -4,6 +4,7 @@ import { Button, Callout, Card, Combobox, Dialog, Input } from '@rauboti/ui'
 import {
   createPokemon,
   derive,
+  updatePokemon,
   type DerivationCandidate,
   type PokemonInput,
   type Pokemon,
@@ -13,13 +14,20 @@ import { SpeciesSearch } from './SpeciesSearch'
 import { LevelPicker } from './LevelPicker'
 
 /**
- * The MVP register flow (US1, FR-001–FR-005 web side): search a species, enter IVs + the observed CP,
- * preview the **server-derived** level/HP/stats/IV%, disambiguate a CP collision, reject an impossible
- * combination, set flags + catch date, and save. The dialog does no stat math — the preview reads
- * `POST /api/derivation` (research D7) and the authoritative derived block comes back from
- * `POST /api/pokemon`. Save is blocked until the derivation confirms exactly one level (auto-selected
- * when unambiguous, chosen from the [LevelPicker] on a collision, impossible when the candidate list
- * is empty). No nickname field (spec assumption 2026-07-20).
+ * The register / edit flow (US1 create + US2 edit, FR-001–FR-005 + FR-010 web side): search a
+ * species, enter IVs + the observed CP, preview the **server-derived** level/HP/stats/IV%,
+ * disambiguate a CP collision, reject an impossible combination, set flags + catch date, and save.
+ * The dialog does no stat math — the preview reads `POST /api/derivation` (research D7) and the
+ * authoritative derived block comes back from `POST /api/pokemon` (create) or `PATCH /api/pokemon/{id}`
+ * (edit). Save is blocked until the derivation confirms exactly one level (auto-selected when
+ * unambiguous, chosen from the [LevelPicker] on a collision, impossible when the candidate list is
+ * empty). No nickname field (spec assumption 2026-07-20).
+ *
+ * `editing` switches to edit mode: the form is prefilled from that Pokémon and Save PATCHes it
+ * (re-running the derivation on any IV/CP change — the collision picker reappears when applicable).
+ * Purification is just an ordinary edit — change IVs/CP and set the purified flag in one save (spec
+ * assumption). The caller remounts this per target (a fresh `key`) so the prefill runs from `useState`
+ * initialisers — no state-syncing effect — and controls `open`/`onOpenChange` for the edit case.
  *
  * The derivation result is kept keyed to the exact inputs that produced it, and everything the UI
  * needs (candidates, the effective level, save-ability) is derived during render. So state is only
@@ -35,6 +43,12 @@ const FLAG_ITEMS = [
   { value: 'purified', label: 'Purified' },
   { value: 'bestBuddy', label: 'Best Buddy' },
 ]
+
+const FLAG_KEYS = ['shiny', 'shadow', 'lucky', 'purified', 'bestBuddy'] as const
+
+/** The set flags of a Pokémon as Combobox values (the inverse of the submit-time mapping). */
+const activeFlagValues = (flags: Pokemon['flags']): string[] =>
+  FLAG_KEYS.filter((key) => flags[key])
 
 /** The derivation result tagged with the input signature it was computed for, so a stale response
  *  is never rendered against changed inputs. */
@@ -52,23 +66,49 @@ const ivNum = (raw: string): number => Number(raw || '0')
 
 export const RegisterDialog = ({
   trigger,
+  editing,
+  open: openProp,
+  onOpenChange,
   onCreated,
+  onUpdated,
 }: {
   trigger?: ReactNode
+  /** When set, the dialog edits this Pokémon (prefilled, Save PATCHes) instead of registering. */
+  editing?: Pokemon | null
+  /** Controlled open state (used by the collection page to open the edit flow from a row). */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   onCreated?: (pokemon: Pokemon) => void
+  onUpdated?: (pokemon: Pokemon) => void
 }) => {
-  const [open, setOpen] = useState(false)
+  const isEditing = editing != null
 
-  const [species, setSpecies] = useState<Species | null>(null)
-  const [ivAtk, setIvAtk] = useState('0')
-  const [ivDef, setIvDef] = useState('0')
-  const [ivSta, setIvSta] = useState('0')
-  const [cpText, setCpText] = useState('')
-  const [flagValues, setFlagValues] = useState<string[]>([])
-  const [caughtAt, setCaughtAt] = useState('')
+  const controlled = openProp !== undefined
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlled ? openProp : internalOpen
+  const setOpen = (next: boolean) => {
+    if (!controlled) setInternalOpen(next)
+    onOpenChange?.(next)
+  }
+
+  // Prefill from `editing` via initialisers — the caller remounts (fresh `key`) per target, so this
+  // runs once per edit and never needs a state-syncing effect.
+  const [species, setSpecies] = useState<Species | null>(
+    editing?.species ?? null,
+  )
+  const [ivAtk, setIvAtk] = useState(editing ? String(editing.ivAtk) : '0')
+  const [ivDef, setIvDef] = useState(editing ? String(editing.ivDef) : '0')
+  const [ivSta, setIvSta] = useState(editing ? String(editing.ivSta) : '0')
+  const [cpText, setCpText] = useState(editing ? String(editing.cp) : '')
+  const [flagValues, setFlagValues] = useState<string[]>(
+    editing ? activeFlagValues(editing.flags) : [],
+  )
+  const [caughtAt, setCaughtAt] = useState(editing?.caughtAt ?? '')
 
   const [derivation, setDerivation] = useState<Derivation | null>(null)
-  const [pickedLevel, setPickedLevel] = useState<number | null>(null)
+  const [pickedLevel, setPickedLevel] = useState<number | null>(
+    editing?.derived.level ?? null,
+  )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -167,11 +207,14 @@ export const RegisterDialog = ({
     }
     setSubmitting(true)
     setError(null)
-    createPokemon(input)
-      .then((created) => {
-        onCreated?.(created)
+    const saved =
+      isEditing && editing
+        ? updatePokemon(editing.id, input).then((p) => onUpdated?.(p))
+        : createPokemon(input).then((p) => onCreated?.(p))
+    saved
+      .then(() => {
         setOpen(false)
-        reset()
+        if (!isEditing) reset()
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Could not save')
@@ -179,15 +222,21 @@ export const RegisterDialog = ({
       .finally(() => setSubmitting(false))
   }
 
+  const defaultTrigger = isEditing ? (
+    <span hidden aria-hidden="true" />
+  ) : (
+    <Button>Register</Button>
+  )
+
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) reset()
+        if (!next && !isEditing) reset()
       }}
-      trigger={trigger ?? <Button>Register</Button>}
-      title="Register a Pokémon"
+      trigger={trigger ?? defaultTrigger}
+      title={isEditing ? 'Edit Pokémon' : 'Register a Pokémon'}
       asForm
       onSubmit={handleSubmit}
       footer={
