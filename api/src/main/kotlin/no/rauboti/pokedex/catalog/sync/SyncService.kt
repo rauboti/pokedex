@@ -1,7 +1,7 @@
 package no.rauboti.pokedex.catalog.sync
 
 import no.rauboti.pokedex.catalog.sync.domain.NormalizedCatalog
-import no.rauboti.pokedex.move.MoveRepository
+import no.rauboti.pokedex.move.MoveService
 import no.rauboti.pokedex.species.SpeciesRepository
 import no.rauboti.pokedex.speciesmove.SpeciesMoveRepository
 import org.springframework.stereotype.Service
@@ -26,7 +26,7 @@ import java.time.Instant
 class SyncService(
     private val gamedataClient: GamedataClient,
     private val gamedataNormalizer: GamedataNormalizer,
-    private val moveRepo: MoveRepository,
+    private val moveService: MoveService,
     private val speciesMoveRepo: SpeciesMoveRepository,
     private val speciesRepo: SpeciesRepository,
     private val stalenessRescan: StalenessRescan,
@@ -39,7 +39,7 @@ class SyncService(
         val syncedAt = Instant.now()
 
         tx.executeWithoutResult {
-            normalized.moves.forEach { moveRepo.upsert(it, syncedAt) }
+            normalized.moves.forEach { moveService.upsert(it, syncedAt) }
             normalized.species.forEach { speciesRepo.upsert(it, syncedAt) }
             val poolBySpecies = normalized.pool.groupBy { it.speciesId }
             normalized.species.forEach { speciesMoveRepo.replacePool(it.id, poolBySpecies[it.id].orEmpty()) }

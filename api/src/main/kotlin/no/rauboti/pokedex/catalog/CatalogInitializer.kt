@@ -1,6 +1,5 @@
 package no.rauboti.pokedex.catalog
 
-
 import no.rauboti.pokedex.catalog.sync.SyncService
 import no.rauboti.pokedex.common.GamedataUnavailableException
 import no.rauboti.pokedex.species.SpeciesRepository

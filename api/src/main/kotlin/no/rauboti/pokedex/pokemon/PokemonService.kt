@@ -9,7 +9,7 @@ import no.rauboti.pokedex.common.NotFoundException
 import no.rauboti.pokedex.common.UnprocessableException
 import no.rauboti.pokedex.derivation.dto.DerivedDto
 import no.rauboti.pokedex.derivation.dto.DerivedProjectionDto
-import no.rauboti.pokedex.move.MoveRepository
+import no.rauboti.pokedex.move.MoveService
 import no.rauboti.pokedex.move.dto.MoveDto
 import no.rauboti.pokedex.move.dto.MoveSetDto
 import no.rauboti.pokedex.pokemon.dto.FlagsDto
@@ -35,14 +35,14 @@ import java.util.UUID
 @Service
 class PokemonService(
     private val caughtPokemonService: CaughtPokemonService,
-    private val moveRepo: MoveRepository,
+    private val moveService: MoveService,
     private val speciesRepo: SpeciesRepository,
 ) {
     fun list(userId: String): List<PokemonDto> {
         val rows = caughtPokemonService.findByUserId(userId)
         if (rows.isEmpty()) return emptyList()
         val speciesById = speciesRepo.findByIds(rows.map { it.speciesId }.toSet()).associateBy { it.id }
-        val movesById = moveRepo.findByIds(rows.flatMap { it.recordedMoveIds() }.toSet()).associateBy { it.id }
+        val movesById = moveService.findByIds(rows.flatMap { it.recordedMoveIds() }.toSet()).associateBy { it.id }
         return rows.map { assemble(it, speciesById.getValue(it.speciesId), movesById) }
     }
 
@@ -214,8 +214,8 @@ class PokemonService(
     ) {
         val ids = listOfNotNull(fast, charged1, charged2)
         if (ids.isEmpty()) return
-        val pool = moveRepo.poolMoveIds(speciesId)
-        val byId = moveRepo.findByIds(ids).associateBy { it.id }
+        val pool = moveService.poolMoveIds(speciesId)
+        val byId = moveService.findByIds(ids).associateBy { it.id }
         fast?.let { requireSlot(it, pool, byId, wantFast = true) }
         charged1?.let { requireSlot(it, pool, byId, wantFast = false) }
         charged2?.let { requireSlot(it, pool, byId, wantFast = false) }
@@ -239,7 +239,7 @@ class PokemonService(
 
     // --- assembly -------------------------------------------------------------------------------
 
-    private fun movesById(ids: List<String>): Map<String, MoveDto> = moveRepo.findByIds(ids.toSet()).associateBy { it.id }
+    private fun movesById(ids: List<String>): Map<String, MoveDto> = moveService.findByIds(ids.toSet()).associateBy { it.id }
 
     private fun assemble(
         row: CaughtPokemon,

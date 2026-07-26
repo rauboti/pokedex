@@ -3,7 +3,7 @@ package no.rauboti.pokedex.catalog.sync
 import io.mockk.every
 import io.mockk.mockk
 import no.rauboti.pokedex.common.GamedataUnavailableException
-import no.rauboti.pokedex.move.MoveRepository
+import no.rauboti.pokedex.move.MoveService
 import no.rauboti.pokedex.species.SpeciesRepository
 import no.rauboti.pokedex.support.IntegrationTest
 import org.assertj.core.api.Assertions.assertThat
@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.jdbc.core.simple.JdbcClient
 
 /**
- * The catalog sync against a real Postgres (Testcontainers), with the external [GamedataClient]
+ * The catalog sync against a real Postgres (Testcontainers), with the external [GamedataClientImplementation]
  * stubbed at the interface level with MockK (research D5 amendment — no HTTP-level mock): a full sync
  * upserts species/move/species_move with `synced_at`; a re-sync updates changed base stats in place
  * and replaces a species' pool without deleting species rows; a client failure surfaces
@@ -35,7 +35,7 @@ class SyncServiceTest : IntegrationTest() {
 
     @Autowired private lateinit var syncService: SyncService
 
-    @Autowired private lateinit var moveRepository: MoveRepository
+    @Autowired private lateinit var moveService: MoveService
 
     @Autowired private lateinit var speciesRepository: SpeciesRepository
 
@@ -89,7 +89,7 @@ class SyncServiceTest : IntegrationTest() {
         syncService.sync()
 
         assertThat(speciesRepository.count()).isEqualTo(5) // VENUSAUR(+mega), RATTATA(+alola), CHARMANDER
-        assertThat(moveRepository.count()).isEqualTo(11)
+        assertThat(moveService.count()).isEqualTo(11)
         assertThat(speciesRepository.lastSyncedAt()).isNotNull()
         assertThat(poolMoveIds("VENUSAUR"))
             .containsExactlyInAnyOrder("RAZOR_LEAF_FAST", "VINE_WHIP_FAST", "SLUDGE_BOMB", "POWER_WHIP", "FRENZY_PLANT")

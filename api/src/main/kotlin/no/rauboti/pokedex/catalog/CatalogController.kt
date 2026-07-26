@@ -1,11 +1,9 @@
 package no.rauboti.pokedex.catalog
 
 import no.rauboti.pokedex.catalog.domain.CatalogStatus
-
-
 import no.rauboti.pokedex.catalog.sync.SyncService
 import no.rauboti.pokedex.caughtpokemon.CaughtPokemonService
-import no.rauboti.pokedex.move.MoveRepository
+import no.rauboti.pokedex.move.MoveService
 import no.rauboti.pokedex.species.SpeciesRepository
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -23,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class CatalogController(
     private val caughtPokemonService: CaughtPokemonService,
-    private val moveRepo: MoveRepository,
+    private val moveService: MoveService,
     private val speciesRepo: SpeciesRepository,
     private val syncService: SyncService,
 ) {
@@ -44,7 +42,7 @@ class CatalogController(
         val userId = requireNotNull(sub) { "authenticated request without a sub" }
         return CatalogStatus(
             speciesCount = speciesRepo.count(),
-            moveCount = moveRepo.count(),
+            moveCount = moveService.count(),
             syncedAt = speciesRepo.lastSyncedAt(),
             stalePokemonCount = caughtPokemonService.countStaleByUserId(userId),
         )

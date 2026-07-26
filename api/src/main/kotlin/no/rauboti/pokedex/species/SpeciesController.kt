@@ -1,8 +1,8 @@
 package no.rauboti.pokedex.species
 
 import no.rauboti.pokedex.common.BadRequestException
-import no.rauboti.pokedex.species.domain.Species
 import no.rauboti.pokedex.species.SpeciesRepository
+import no.rauboti.pokedex.species.domain.Species
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController

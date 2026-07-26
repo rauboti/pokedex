@@ -1,7 +1,7 @@
 package no.rauboti.pokedex.move
 
-import no.rauboti.pokedex.move.dto.MoveDto
 import no.rauboti.pokedex.catalog.sync.domain.NormalizedMove
+import no.rauboti.pokedex.move.dto.MoveDto
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
 import java.time.Instant

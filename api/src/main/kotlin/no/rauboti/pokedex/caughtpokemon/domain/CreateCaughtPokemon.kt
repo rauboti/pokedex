@@ -24,5 +24,3 @@ data class CreateCaughtPokemon(
     val chargedMove2Id: String? = null,
     val caughtAt: LocalDate? = null,
 )
-
-

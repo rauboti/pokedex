@@ -13,13 +13,19 @@ class CaughtPokemonService(
 
     fun findByUserId(userId: String) = repository.findByUserId(userId)
 
-    fun findByUserIdAndId(id: UUID, userId: String) = repository.findByUserIdAndId(id, userId)
+    fun findByUserIdAndId(
+        id: UUID,
+        userId: String,
+    ) = repository.findByUserIdAndId(id, userId)
 
     fun findAll() = repository.findAll()
 
     fun update(caughtPokemon: CaughtPokemon) = repository.update(caughtPokemon)
 
-    fun delete(id: UUID, userId: String) = repository.delete(id, userId)
+    fun delete(
+        id: UUID,
+        userId: String,
+    ) = repository.delete(id, userId)
 
     fun markAsStale(ids: List<UUID>) = repository.markAsStale(ids)
 
