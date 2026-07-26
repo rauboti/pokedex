@@ -1,9 +1,21 @@
 package no.rauboti.pokedex.pokemon
 
+import no.rauboti.pokedex.caughtpokemon.CaughtPokemonService
+import no.rauboti.pokedex.caughtpokemon.domain.CaughtBasePokemon
+import no.rauboti.pokedex.caughtpokemon.domain.CaughtPokemon
+import no.rauboti.pokedex.caughtpokemon.domain.CreateCaughtPokemon
+import no.rauboti.pokedex.caughtpokemon.domain.PatchCaughtPokemon
 import no.rauboti.pokedex.common.NotFoundException
 import no.rauboti.pokedex.common.UnprocessableException
-import no.rauboti.pokedex.species.Species
+import no.rauboti.pokedex.derivation.dto.DerivedDto
+import no.rauboti.pokedex.derivation.dto.DerivedProjectionDto
+import no.rauboti.pokedex.move.MoveRepository
+import no.rauboti.pokedex.move.dto.MoveDto
+import no.rauboti.pokedex.move.dto.MoveSetDto
+import no.rauboti.pokedex.pokemon.dto.FlagsDto
+import no.rauboti.pokedex.pokemon.dto.PokemonDto
 import no.rauboti.pokedex.species.SpeciesRepository
+import no.rauboti.pokedex.species.domain.Species
 import no.rauboti.pokedex.stats.CpmTable
 import no.rauboti.pokedex.stats.LevelSolver
 import no.rauboti.pokedex.stats.Projections
@@ -22,15 +34,15 @@ import java.util.UUID
  */
 @Service
 class PokemonService(
-    private val species: SpeciesRepository,
-    private val moves: MoveRepository,
-    private val caught: RegisteredPokemonRepository,
+    private val caughtPokemonService: CaughtPokemonService,
+    private val moveRepo: MoveRepository,
+    private val speciesRepo: SpeciesRepository,
 ) {
     fun list(userId: String): List<PokemonDto> {
-        val rows = caught.listByUser(userId)
+        val rows = caughtPokemonService.findByUserId(userId)
         if (rows.isEmpty()) return emptyList()
-        val speciesById = species.findByIds(rows.map { it.speciesId }.toSet()).associateBy { it.id }
-        val movesById = moves.findByIds(rows.flatMap { it.recordedMoveIds() }.toSet()).associateBy { it.id }
+        val speciesById = speciesRepo.findByIds(rows.map { it.speciesId }.toSet()).associateBy { it.id }
+        val movesById = moveRepo.findByIds(rows.flatMap { it.recordedMoveIds() }.toSet()).associateBy { it.id }
         return rows.map { assemble(it, speciesById.getValue(it.speciesId), movesById) }
     }
 
@@ -38,26 +50,26 @@ class PokemonService(
         userId: String,
         id: UUID,
     ): PokemonDto? {
-        val row = caught.findByIdAndUser(id, userId) ?: return null
-        val species = species.findById(row.speciesId) ?: return null
+        val row = caughtPokemonService.findByUserIdAndId(id, userId) ?: return null
+        val species = speciesRepo.findById(row.speciesId) ?: return null
         return assemble(row, species, movesById(row.recordedMoveIds()))
     }
 
     fun create(
         userId: String,
-        input: PokemonInput,
+        input: CreateCaughtPokemon,
     ): PokemonDto {
         validateIvsCp(input.ivAtk, input.ivDef, input.ivSta, input.cp)
         val species =
-            species.findById(input.speciesId)
+            speciesRepo.findById(input.speciesId)
                 ?: throw NotFoundException("unknown-species", "No species with id '${input.speciesId}'")
         requireRegistrable(input.speciesId)
         val level = confirmLevel(species, input.ivAtk, input.ivDef, input.ivSta, input.cp, input.level)
         validateMoves(species.id, input.fastMoveId, input.chargedMove1Id, input.chargedMove2Id)
 
         val saved =
-            caught.insert(
-                RegisteredBasePokemon(
+            caughtPokemonService.save(
+                CaughtBasePokemon(
                     userId = userId,
                     speciesId = species.id,
                     ivAtk = input.ivAtk,
@@ -83,9 +95,9 @@ class PokemonService(
     fun update(
         userId: String,
         id: UUID,
-        patch: PokemonPatch,
+        patch: PatchCaughtPokemon,
     ): PokemonDto? {
-        val existing = caught.findByIdAndUser(id, userId) ?: return null
+        val existing = caughtPokemonService.findByUserIdAndId(id, userId) ?: return null
 
         val speciesId = patch.speciesId ?: existing.speciesId
         val ivAtk = patch.ivAtk ?: existing.ivAtk
@@ -93,7 +105,7 @@ class PokemonService(
         val ivSta = patch.ivSta ?: existing.ivSta
         val cp = patch.cp ?: existing.cp
         val species =
-            species.findById(speciesId)
+            speciesRepo.findById(speciesId)
                 ?: throw NotFoundException("unknown-species", "No species with id '$speciesId'")
         if (patch.speciesId != null) requireRegistrable(speciesId)
 
@@ -121,7 +133,7 @@ class PokemonService(
         validateMoves(speciesId, fast, charged1, charged2)
 
         val updated =
-            caught.update(
+            caughtPokemonService.update(
                 existing.copy(
                     speciesId = speciesId,
                     ivAtk = ivAtk,
@@ -147,7 +159,7 @@ class PokemonService(
     fun delete(
         userId: String,
         id: UUID,
-    ): Boolean = caught.delete(id, userId)
+    ): Boolean = caughtPokemonService.delete(id, userId)
 
     // --- invariants -----------------------------------------------------------------------------
 
@@ -163,7 +175,7 @@ class PokemonService(
     }
 
     private fun requireRegistrable(speciesId: String) {
-        if (species.registrable(speciesId) != true) {
+        if (speciesRepo.registrable(speciesId) != true) {
             throw UnprocessableException(
                 "species-not-registrable",
                 "Species '$speciesId' cannot be registered (a mega or temporary battle form)",
@@ -202,8 +214,8 @@ class PokemonService(
     ) {
         val ids = listOfNotNull(fast, charged1, charged2)
         if (ids.isEmpty()) return
-        val pool = moves.poolMoveIds(speciesId)
-        val byId = moves.findByIds(ids).associateBy { it.id }
+        val pool = moveRepo.poolMoveIds(speciesId)
+        val byId = moveRepo.findByIds(ids).associateBy { it.id }
         fast?.let { requireSlot(it, pool, byId, wantFast = true) }
         charged1?.let { requireSlot(it, pool, byId, wantFast = false) }
         charged2?.let { requireSlot(it, pool, byId, wantFast = false) }
@@ -227,10 +239,10 @@ class PokemonService(
 
     // --- assembly -------------------------------------------------------------------------------
 
-    private fun movesById(ids: List<String>): Map<String, MoveDto> = moves.findByIds(ids.toSet()).associateBy { it.id }
+    private fun movesById(ids: List<String>): Map<String, MoveDto> = moveRepo.findByIds(ids.toSet()).associateBy { it.id }
 
     private fun assemble(
-        row: RegisteredPokemon,
+        row: CaughtPokemon,
         species: Species,
         movesById: Map<String, MoveDto>,
     ): PokemonDto {
@@ -258,7 +270,7 @@ class PokemonService(
                             row.level,
                             row.bestBuddy,
                         ).map {
-                            ProjectionDto(it.label.name, it.level, it.cp, it.hp, it.attack, it.defense, it.stamina)
+                            DerivedProjectionDto(it.label.name, it.level, it.cp, it.hp, it.attack, it.defense, it.stamina)
                         },
             )
         return PokemonDto(
@@ -270,7 +282,7 @@ class PokemonService(
             cp = row.cp,
             flags = FlagsDto(row.shiny, row.shadow, row.lucky, row.purified, row.bestBuddy),
             moves =
-                MovesDto(
+                MoveSetDto(
                     fast = row.fastMoveId?.let { movesById[it] },
                     charged1 = row.charged1MoveId?.let { movesById[it] },
                     charged2 = row.charged2MoveId?.let { movesById[it] },
@@ -282,7 +294,7 @@ class PokemonService(
         )
     }
 
-    private fun RegisteredPokemon.recordedMoveIds(): List<String> = listOfNotNull(fastMoveId, charged1MoveId, charged2MoveId)
+    private fun CaughtPokemon.recordedMoveIds(): List<String> = listOfNotNull(fastMoveId, charged1MoveId, charged2MoveId)
 
     private companion object {
         val IV_RANGE = 0..15

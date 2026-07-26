@@ -1,6 +1,9 @@
 package no.rauboti.pokedex.pokemon
 
+import no.rauboti.pokedex.caughtpokemon.domain.CreateCaughtPokemon
+import no.rauboti.pokedex.caughtpokemon.domain.PatchCaughtPokemon
 import no.rauboti.pokedex.common.NotFoundException
+import no.rauboti.pokedex.pokemon.dto.PokemonDto
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -22,32 +25,32 @@ import java.util.UUID
  */
 @RestController
 class PokemonController(
-    private val pokemon: PokemonService,
+    private val pokemonService: PokemonService,
 ) {
     @GetMapping("/api/pokemon")
     fun list(
         @AuthenticationPrincipal jwt: Jwt,
-    ): List<PokemonDto> = pokemon.list(userId(jwt))
+    ): List<PokemonDto> = pokemonService.list(userId(jwt))
 
     @GetMapping("/api/pokemon/{id}")
     fun get(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable id: UUID,
-    ): PokemonDto = pokemon.get(userId(jwt), id) ?: throw notFound(id)
+    ): PokemonDto = pokemonService.get(userId(jwt), id) ?: throw notFound(id)
 
     @PostMapping("/api/pokemon")
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestBody input: PokemonInput,
-    ): PokemonDto = pokemon.create(userId(jwt), input)
+        @RequestBody input: CreateCaughtPokemon,
+    ): PokemonDto = pokemonService.create(userId(jwt), input)
 
     @PatchMapping("/api/pokemon/{id}")
     fun update(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable id: UUID,
-        @RequestBody patch: PokemonPatch,
-    ): PokemonDto = pokemon.update(userId(jwt), id, patch) ?: throw notFound(id)
+        @RequestBody patch: PatchCaughtPokemon,
+    ): PokemonDto = pokemonService.update(userId(jwt), id, patch) ?: throw notFound(id)
 
     @DeleteMapping("/api/pokemon/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -55,7 +58,7 @@ class PokemonController(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable id: UUID,
     ) {
-        if (!pokemon.delete(userId(jwt), id)) throw notFound(id)
+        if (!pokemonService.delete(userId(jwt), id)) throw notFound(id)
     }
 
     private fun userId(jwt: Jwt): String = requireNotNull(jwt.subject) { "authenticated request without a sub" }

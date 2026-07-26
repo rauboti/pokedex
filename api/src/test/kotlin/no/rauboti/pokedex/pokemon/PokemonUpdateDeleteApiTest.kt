@@ -66,7 +66,7 @@ class PokemonUpdateDeleteApiTest : IntegrationTest() {
     @Test
     fun `changing CP re-derives the level and clears the stale flag`() {
         val id = register(userA, """{"speciesId":"VENUSAUR","ivAtk":15,"ivDef":15,"ivSta":15,"cp":2720}""")
-        // Force the row stale directly, as the post-sync rescan would (T018).
+        // Force the row stale directly, as the post-sync rescan would.
         jdbc.sql("UPDATE caught_pokemon SET stale = true WHERE id = :id::uuid").param("id", id).update()
 
         // Venusaur 15/15/15 at CP 2332 resolves to level 30.
