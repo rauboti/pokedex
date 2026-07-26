@@ -12,8 +12,8 @@ data class DerivationRequest(
 /**
  * One CP→level candidate (contract `DerivationResult.candidates[]`). `dustCost` is the power-up
  * stardust at this level — an informational hint shown per candidate. Collisions occur only within
- * the low-level CP-floor plateau, where the dust cost is equal across candidates (spec/data-model
- * amended 2026-07-21); the player distinguishes candidates by level.
+ * the low-level CP-floor plateau, where the dust cost is equal across candidates; the player
+ * distinguishes candidates by level.
  */
 data class DerivationCandidate(
     val level: Double,
@@ -24,7 +24,7 @@ data class DerivationCandidate(
     val dustCost: Int,
 )
 
-/** `POST /api/derivation` result (contract `DerivationResult`). Empty `candidates` = impossible (SC-004). */
+/** `POST /api/derivation` result (contract `DerivationResult`). Empty `candidates` = impossible. */
 data class DerivationResult(
     val candidates: List<DerivationCandidate>,
 )

@@ -6,10 +6,10 @@ import java.sql.ResultSet
 
 /**
  * Read access to the synced species catalog for search (US1). Matches a case-insensitive name
- * substring, restricted to **registrable** species (mega/temporary battle forms are never returned —
- * clarification 2026-07-20), ordered by dex number then form (base form before named forms), capped
- * by the caller's limit. `position(lower(:q) in lower(name))` is a true substring test — no LIKE
- * wildcard semantics leak from the query string.
+ * substring, restricted to **registrable** species (mega/temporary battle forms are never returned),
+ * ordered by dex number then form (base form before named forms), capped by the caller's limit.
+ * `position(lower(:q) in lower(name))` is a true substring test — no LIKE wildcard semantics leak
+ * from the query string.
  */
 @Repository
 class SpeciesRepository(
@@ -38,7 +38,7 @@ class SpeciesRepository(
     /**
      * A single species by its stable id, or null if absent. Unlike [search] this is not filtered by
      * `registrable` — it's a direct lookup (e.g. the derivation preview needs base stats for any id
-     * the caller supplies; the registrable check on *save* lives in the write path, T017).
+     * the caller supplies; the registrable check on *save* lives in the write path).
      */
     fun findById(id: String): Species? =
         jdbc

@@ -2,9 +2,9 @@ package no.rauboti.pokedex.gamedata
 
 /**
  * The normalized game-data catalog — the output of [GamedataNormalizer], ready for [SyncService] to
- * upsert. Plain domain rows decoupled from the source feed's JSON shape (research D5): [moves] is
- * deduplicated by id (a move known by many species is one row), while [pool] carries one entry per
- * (species, move) with the legacy/Elite-TM flag that belongs to the pairing, not the move.
+ * upsert. Plain domain rows decoupled from the source feed's JSON shape: [moves] is deduplicated by
+ * id (a move known by many species is one row), while [pool] carries one entry per (species, move)
+ * with the legacy/Elite-TM flag that belongs to the pairing, not the move.
  */
 data class NormalizedCatalog(
     val species: List<NormalizedSpecies>,
@@ -13,7 +13,7 @@ data class NormalizedCatalog(
 )
 
 /** One species+form row (data-model `species`). Megas/temporary battle forms are `registrable=false`.
- *  `imageUrl`/`shinyImageUrl` come from the feed's `assets` and are null when absent (research D5). */
+ *  `imageUrl`/`shinyImageUrl` come from the feed's `assets` and are null when absent. */
 data class NormalizedSpecies(
     val id: String,
     val dexNr: Int,

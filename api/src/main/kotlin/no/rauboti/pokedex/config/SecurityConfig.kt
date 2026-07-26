@@ -19,11 +19,11 @@ import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 /**
- * Security for the BFF (research D1). pokedex is a *consumer* of hive: it validates hive-issued RS256
- * JWTs offline via hive's JWKS. The browser holds only a session cookie — the token lives
- * server-side in the session — so API requests are authenticated by [SessionTokenAuthenticationFilter],
- * which decodes that token (same [JwtDecoder]/validators and authorities converter a resource server
- * would use) and silently refreshes it on expiry.
+ * Security for the BFF. pokedex is a *consumer* of hive: it validates hive-issued RS256 JWTs offline
+ * via hive's JWKS. The browser holds only a session cookie — the token lives server-side in the session
+ * — so API requests are authenticated by [SessionTokenAuthenticationFilter], which decodes that token
+ * (same [JwtDecoder]/validators and authorities converter a resource server would use) and silently
+ * refreshes it on expiry.
  *
  * The `SecurityContext` itself is stateless (rebuilt per request from the session token, never
  * persisted). URL model (mirrors avec): the `/auth` endpoints are the **public, browser-redirect**
@@ -31,11 +31,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
  * are the **authenticated SPA fetch** calls (`me`, `logout`), needing only a valid session so a hive
  * user *without* a pokedex grant can still see they're signed in and sign out. The rest of the data
  * API additionally requires a pokedex app role (`user` or `admin`) — a signed-in user with no pokedex
- * grant gets a 403 there; the admin-only catalog sync is gated per-endpoint (T010). The actuator
- * health probe is public (compose healthcheck). Unauthenticated calls answer with a plain 401 (no
- * redirect), which the SPA turns into a hive login. CORS is driven by `pokedex.cors.allowed-origins`.
- * Session-cookie hardening (HttpOnly, SameSite=Lax, Secure via `SESSION_COOKIE_SECURE`) is declared
- * in application.yml.
+ * grant gets a 403 there; the admin-only catalog sync is gated per-endpoint. The actuator health probe
+ * is public (compose healthcheck). Unauthenticated calls answer with a plain 401 (no redirect), which
+ * the SPA turns into a hive login. CORS is driven by `pokedex.cors.allowed-origins`. Session-cookie
+ * hardening (HttpOnly, SameSite=Lax, Secure via `SESSION_COOKIE_SECURE`) is declared in application.yml.
  */
 @Configuration
 @EnableWebSecurity

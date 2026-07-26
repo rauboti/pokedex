@@ -17,15 +17,15 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 /**
  * Authenticates BFF API requests from the **session-stored** hive access token — the browser holds
- * only the session cookie, so the token never leaves the server (BFF; research D1). Each request
- * decodes the stored access token and builds a per-request `SecurityContext` from its claims,
- * reusing the very same [JwtDecoder]/validators and authorities converter a direct resource server
- * would (so authorities and `hasRole(...)` checks are identical).
+ * only the session cookie, so the token never leaves the server (BFF). Each request decodes the
+ * stored access token and builds a per-request `SecurityContext` from its claims, reusing the very
+ * same [JwtDecoder]/validators and authorities converter a direct resource server would (so
+ * authorities and `hasRole(...)` checks are identical).
  *
  * If the access token has expired, it is refreshed **silently, server-side** with the stored refresh
  * token — the user's work survives the short access-token TTL with no browser round-trip. If the
  * refresh also fails (refresh token expired/revoked, or hive unreachable), the dead tokens are
- * dropped and the request stays unauthenticated → 401 → the SPA restarts the hive login (research D1).
+ * dropped and the request stays unauthenticated → 401 → the SPA restarts the hive login.
  */
 @Component
 class SessionTokenAuthenticationFilter(

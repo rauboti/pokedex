@@ -12,19 +12,19 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 /**
- * The Pokémon CRUD domain logic (US1). Enforces the data-model write invariants on every write:
+ * The Pokémon CRUD domain logic. Enforces the data-model write invariants on every write:
  *  0. the species must be registrable (mega/temporary forms rejected on create and species change);
  *  1. the solver must confirm (species, IVs, CP) → level — ambiguous requires a chosen candidate,
- *     no match is a 422 (SC-004);
+ *     no match is a 422;
  *  2. recorded moves must be in the species pool and fast/charged-slot correct;
  *  3. an edit touching species/IVs/CP re-derives the level and clears `stale`.
- * All reads are user-scoped (FR-014) and carry the server-computed derived block (research D7).
+ * All reads are user-scoped and carry the server-computed derived block.
  */
 @Service
 class PokemonService(
     private val species: SpeciesRepository,
     private val moves: MoveRepository,
-    private val caught: CaughtPokemonRepository,
+    private val caught: RegisteredPokemonRepository,
 ) {
     fun list(userId: String): List<PokemonDto> {
         val rows = caught.listByUser(userId)
@@ -57,7 +57,7 @@ class PokemonService(
 
         val saved =
             caught.insert(
-                NewCaughtPokemon(
+                RegisteredBasePokemon(
                     userId = userId,
                     speciesId = species.id,
                     ivAtk = input.ivAtk,
@@ -230,7 +230,7 @@ class PokemonService(
     private fun movesById(ids: List<String>): Map<String, MoveDto> = moves.findByIds(ids.toSet()).associateBy { it.id }
 
     private fun assemble(
-        row: CaughtPokemon,
+        row: RegisteredPokemon,
         species: Species,
         movesById: Map<String, MoveDto>,
     ): PokemonDto {
@@ -282,7 +282,7 @@ class PokemonService(
         )
     }
 
-    private fun CaughtPokemon.recordedMoveIds(): List<String> = listOfNotNull(fastMoveId, charged1MoveId, charged2MoveId)
+    private fun RegisteredPokemon.recordedMoveIds(): List<String> = listOfNotNull(fastMoveId, charged1MoveId, charged2MoveId)
 
     private companion object {
         val IV_RANGE = 0..15

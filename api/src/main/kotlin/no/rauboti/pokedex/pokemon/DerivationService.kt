@@ -10,11 +10,11 @@ import no.rauboti.pokedex.stats.StatFormulas
 import org.springframework.stereotype.Service
 
 /**
- * The stateless CP→level derivation (US1, research D7): bridges the species catalog and the pure
- * stats module. Validates the input, resolves the species' base stats, runs the solver, and builds a
- * candidate (level + derived HP/effective stats + dust hint) for every matching level. Zero
- * candidates means the (species, IVs, CP) combination is impossible (SC-004). The registrable check
- * lives in the write path (T017) — derivation is a read-only preview for any known species.
+ * The stateless CP→level derivation: bridges the species catalog and the pure stats module.
+ * Validates the input, resolves the species' base stats, runs the solver, and builds a candidate
+ * (level + derived HP/effective stats + dust hint) for every matching level. Zero candidates means
+ * the (species, IVs, CP) combination is impossible. The registrable check lives in the write path
+ * — derivation is a read-only preview for any known species.
  */
 @Service
 class DerivationService(

@@ -77,7 +77,6 @@ describe('PokemonFilters', () => {
       await screen.findByRole('option', { name: 'Grass' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Shiny' })).toBeInTheDocument()
-    // Grouped: Types / Flags headings, with a divider between them.
     expect(screen.getByText('Types')).toBeInTheDocument()
     expect(screen.getByText('Flags')).toBeInTheDocument()
     expect(screen.getByRole('separator')).toBeInTheDocument()

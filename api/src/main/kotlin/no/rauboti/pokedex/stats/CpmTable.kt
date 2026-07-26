@@ -3,10 +3,10 @@ package no.rauboti.pokedex.stats
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * The vendored CP-multiplier table (research D6): levels 1.0–51.0 in half-steps, loaded once from
- * the classpath resource `reference/cpm.json`. Pure Kotlin — no Spring — so the stats module is
- * unit-testable in isolation (research D7). Levels are keyed by their doubled integer (half-steps →
- * whole numbers) to avoid floating-point map-key pitfalls.
+ * The vendored CP-multiplier table: levels 1.0–51.0 in half-steps, loaded once from the classpath
+ * resource `reference/cpm.json`. Pure Kotlin — no Spring — so the stats module is unit-testable
+ * in isolation. Levels are keyed by their doubled integer (half-steps → whole numbers) to avoid
+ * floating-point map-key pitfalls.
  */
 object CpmTable {
     private val byHalfStep: Map<Int, Double>

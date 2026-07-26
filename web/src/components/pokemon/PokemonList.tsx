@@ -86,7 +86,6 @@ export const PokemonList = ({
               CP {p.cp}
             </Text>
 
-            {/* HP · Level */}
             <HStack justify="center" gap="4" color="text.muted" fontSize="sm">
               <Text>HP {p.derived.hp}</Text>
               <Text>Level {p.derived.level}</Text>

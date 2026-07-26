@@ -6,9 +6,8 @@ import tools.jackson.databind.JsonNode
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * Normalizes the pokemon-go-api.github.io Pokédex feed into catalog rows (research D5; feed shape and
- * source URLs documented in the research.md D5 addendum). Pure — no Spring context needed to run it,
- * no DB — so it is unit-tested directly against committed fixture JSON.
+ * Normalizes the pokemon-go-api.github.io Pokédex feed into catalog rows. Pure — no Spring context
+ * needed to run it, no DB — so it is unit-tested directly against committed fixture JSON.
  *
  * The feed is a JSON array of species objects; move data is embedded per species under four
  * collections (`quickMoves`/`cinematicMoves` and their `elite*` legacy counterparts). The walk is

@@ -16,8 +16,8 @@ import java.time.LocalDate
  * species (FK); the V2 CHECK constraints reject out-of-range IVs/CP at the DB layer; the `stale` flag
  * and nullable move-slot FKs round-trip; `listAll` + `markStale` back T018's rescan.
  */
-class CaughtPokemonRepositoryTest : IntegrationTest() {
-    @Autowired private lateinit var repo: CaughtPokemonRepository
+class RegisteredPokemonRepositoryTest : IntegrationTest() {
+    @Autowired private lateinit var repo: RegisteredPokemonRepository
 
     @Autowired private lateinit var jdbc: JdbcClient
 
@@ -54,7 +54,7 @@ class CaughtPokemonRepositoryTest : IntegrationTest() {
         stale: Boolean = false,
         fastMoveId: String? = null,
         caughtAt: LocalDate? = LocalDate.of(2026, 7, 10),
-    ) = NewCaughtPokemon(
+    ) = RegisteredBasePokemon(
         userId = userId,
         speciesId = "VENUSAUR",
         ivAtk = ivAtk,

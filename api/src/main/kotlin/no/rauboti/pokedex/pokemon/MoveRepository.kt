@@ -4,9 +4,9 @@ import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
 
 /**
- * Read access to moves and species move-pools for the write path (US1 invariant 2) and DTO
- * assembly. [poolMoveIds] gives the set a species can legally know; [findByIds] resolves recorded
- * move ids to their display shape (with the fast/charged flag used for slot validation).
+ * Read access to moves and species move-pools for the write path and DTO assembly. [poolMoveIds]
+ * gives the set a species can legally know; [findByIds] resolves recorded move ids to their
+ * display shape (with the fast/charged flag used for slot validation).
  */
 @Repository
 class MoveRepository(

@@ -47,9 +47,8 @@ const setCp = async (value: number) => {
   await userEvent.type(field, String(value))
 }
 
-// Select an option from the Flags combobox (the only combobox present in these
-// tests, so its chevron is the sole "Toggle options" control). The dropdown opens
-// from the trigger and its options are clickable.
+// Select an option from the Flags combobox — the only combobox in these tests, so
+// its chevron is the sole "Toggle options" control.
 const chooseFlag = async (optionName: RegExp) => {
   await userEvent.click(screen.getByRole('button', { name: /toggle options/i }))
   await userEvent.click(await screen.findByRole('option', { name: optionName }))
@@ -240,7 +239,6 @@ describe('RegisterDialog', () => {
       level: 20,
       shiny: true,
     })
-    // The dialog closes on success.
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     )

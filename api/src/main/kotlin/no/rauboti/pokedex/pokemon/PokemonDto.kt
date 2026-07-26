@@ -6,9 +6,9 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * A registered Pokémon as the API returns it (contract `Pokemon`, US1). The `derived` block (level,
- * HP, effective stats, IV%, projections) is computed server-side on every read (research D7); the
- * web app does no stat math. `moves` carries the resolved recorded moves (null = unrecorded).
+ * A registered Pokémon as the API returns it (contract `Pokemon`). The `derived` block (level, HP,
+ * effective stats, IV%, projections) is computed server-side on every read; the web app does no
+ * stat math. `moves` carries the resolved recorded moves (null = unrecorded).
  */
 data class PokemonDto(
     val id: UUID,
@@ -39,7 +39,7 @@ data class MovesDto(
     val charged2: MoveDto?,
 )
 
-/** A move as the API returns it (contract `Move`). `legacy` is populated on pool listings (T028); on
+/** A move as the API returns it (contract `Move`). `legacy` is populated on pool listings; on
  *  a Pokémon's recorded moves it is left null. */
 data class MoveDto(
     val id: String,

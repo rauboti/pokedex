@@ -2,8 +2,8 @@ package no.rauboti.pokedex.gamedata
 
 import io.mockk.every
 import io.mockk.mockk
-import no.rauboti.pokedex.pokemon.CaughtPokemonRepository
-import no.rauboti.pokedex.pokemon.NewCaughtPokemon
+import no.rauboti.pokedex.pokemon.RegisteredPokemonRepository
+import no.rauboti.pokedex.pokemon.RegisteredBasePokemon
 import no.rauboti.pokedex.stats.CpmTable
 import no.rauboti.pokedex.stats.StatFormulas
 import no.rauboti.pokedex.support.IntegrationTest
@@ -51,7 +51,7 @@ class StalenessRescanTest : IntegrationTest() {
 
     @Autowired private lateinit var gamedataClient: GamedataClient
 
-    @Autowired private lateinit var caught: CaughtPokemonRepository
+    @Autowired private lateinit var caught: RegisteredPokemonRepository
 
     @Autowired private lateinit var jdbc: JdbcClient
 
@@ -160,7 +160,7 @@ class StalenessRescanTest : IntegrationTest() {
     ): UUID =
         caught
             .insert(
-                NewCaughtPokemon(
+                RegisteredBasePokemon(
                     userId = ownerId,
                     speciesId = speciesId,
                     ivAtk = 15,

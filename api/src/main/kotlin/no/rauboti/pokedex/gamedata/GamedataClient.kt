@@ -10,10 +10,10 @@ import org.springframework.web.client.RestClientException
 import java.time.Duration
 
 /**
- * Fetches the raw game-data feed from the community source (research D5). Interface so [SyncService]
- * can be tested with a MockK stub at this boundary — no HTTP-level mock, matching every sibling app
- * (research D5 amendment). Any transport failure or unusable response is surfaced as
- * [GamedataUnavailableException] (→ 502); parsing/normalization is [GamedataNormalizer]'s job.
+ * Fetches the raw game-data feed from the community source. Interface so [SyncService] can be tested
+ * with a MockK stub at this boundary — no HTTP-level mock, matching every sibling app. Any transport
+ * failure or unusable response is surfaced as [GamedataUnavailableException] (→ 502);
+ * parsing/normalization is [GamedataNormalizer]'s job.
  */
 interface GamedataClient {
     /** The full Pokédex feed as raw JSON (a JSON array of species objects). */

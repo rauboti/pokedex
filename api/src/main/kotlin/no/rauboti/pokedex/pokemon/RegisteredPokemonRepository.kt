@@ -6,16 +6,16 @@ import java.sql.ResultSet
 import java.util.UUID
 
 /**
- * Persistence for the player-owned `caught_pokemon` table (US1). Every read is scoped by `user_id`
- * (FR-014) — a row is invisible to any other user, so a wrong-owner find/update/delete is a no-op
- * (the caller surfaces 404, indistinguishable from "unknown id"). `listAll` + `markStale` are the
- * cross-user hooks the post-sync staleness rescan uses (T018); all other reads stay user-scoped.
+ * Persistence for the player-owned `caught_pokemon` table. Every read is scoped by `user_id` — a row
+ * is invisible to any other user, so a wrong-owner find/update/delete is a no-op (the caller
+ * surfaces 404, indistinguishable from "unknown id"). `listAll` + `markStale` are the cross-user
+ * hooks the post-sync staleness rescan uses; all other reads stay user-scoped.
  */
 @Repository
-class CaughtPokemonRepository(
+class RegisteredPokemonRepository(
     private val jdbc: JdbcClient,
 ) {
-    fun insert(new: NewCaughtPokemon): CaughtPokemon =
+    fun insert(new: RegisteredBasePokemon): RegisteredPokemon =
         jdbc
             .sql(
                 """
@@ -49,7 +49,7 @@ class CaughtPokemonRepository(
             .query { rs, _ -> map(rs) }
             .single()
 
-    fun listByUser(userId: String): List<CaughtPokemon> =
+    fun listByUser(userId: String): List<RegisteredPokemon> =
         jdbc
             .sql("SELECT $COLUMNS FROM caught_pokemon WHERE user_id = :uid ORDER BY created_at")
             .param("uid", userId)
@@ -59,7 +59,7 @@ class CaughtPokemonRepository(
     fun findByIdAndUser(
         id: UUID,
         userId: String,
-    ): CaughtPokemon? =
+    ): RegisteredPokemon? =
         jdbc
             .sql("SELECT $COLUMNS FROM caught_pokemon WHERE id = :id AND user_id = :uid")
             .param("id", id)
@@ -69,8 +69,8 @@ class CaughtPokemonRepository(
             .orElse(null)
 
     /** Update the mutable fields of the caller's own row; returns the updated row, or null if the id
-     *  isn't owned by [CaughtPokemon.userId] (wrong owner / unknown id). */
-    fun update(pokemon: CaughtPokemon): CaughtPokemon? =
+     *  isn't owned by [RegisteredPokemon.userId] (wrong owner / unknown id). */
+    fun update(pokemon: RegisteredPokemon): RegisteredPokemon? =
         jdbc
             .sql(
                 """
@@ -116,7 +116,7 @@ class CaughtPokemonRepository(
             .update() > 0
 
     /** Every user's rows — the post-sync rescan (T018) re-derives across the whole table. */
-    fun listAll(): List<CaughtPokemon> = jdbc.sql("SELECT $COLUMNS FROM caught_pokemon").query { rs, _ -> map(rs) }.list()
+    fun listAll(): List<RegisteredPokemon> = jdbc.sql("SELECT $COLUMNS FROM caught_pokemon").query { rs, _ -> map(rs) }.list()
 
     /** Flag the given rows stale (T018); a no-op on an empty id list. */
     fun markStale(ids: List<UUID>) {
@@ -127,8 +127,8 @@ class CaughtPokemonRepository(
             .update()
     }
 
-    private fun map(rs: ResultSet): CaughtPokemon =
-        CaughtPokemon(
+    private fun map(rs: ResultSet): RegisteredPokemon =
+        RegisteredPokemon(
             id = UUID.fromString(rs.getString("id")),
             userId = rs.getString("user_id"),
             speciesId = rs.getString("species_id"),

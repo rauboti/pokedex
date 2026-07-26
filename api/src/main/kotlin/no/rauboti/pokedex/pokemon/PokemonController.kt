@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 /**
- * The caller's Pokémon collection (US1, FR-010). All operations are scoped to the authenticated
- * user's hive `sub`; a by-id read/edit/delete of a row the caller doesn't own is a 404,
- * indistinguishable from an unknown id. Create/edit run the solver and the write invariants in
- * [PokemonService]; every response carries the server-computed derived block.
+ * The caller's Pokémon collection. All operations are scoped to the authenticated user's hive
+ * `sub`; a by-id read/edit/delete of a row the caller doesn't own is a 404, indistinguishable
+ * from an unknown id. Create/edit run the solver and the write invariants in [PokemonService];
+ * every response carries the server-computed derived block.
  */
 @RestController
 class PokemonController(
