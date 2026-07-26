@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse, delay } from 'msw'
+import { MemoryRouter } from 'react-router'
 import { ThemeProvider } from '@rauboti/ui'
 import { CollectionPage } from './CollectionPage'
 import { server } from '@/mocks/server'
@@ -18,7 +19,9 @@ import type { Pokemon } from '@/api/schemas'
 const renderPage = () =>
   render(
     <ThemeProvider>
-      <CollectionPage />
+      <MemoryRouter>
+        <CollectionPage />
+      </MemoryRouter>
     </ThemeProvider>,
   )
 

@@ -209,6 +209,13 @@ export const derive = (input: DerivationRequest): Promise<DerivationResult> =>
 export const listPokemon = (signal?: AbortSignal): Promise<Pokemon[]> =>
   apiRequest('/pokemon', pokemonListSchema, { signal })
 
+/** `GET /api/pokemon/{id}` — a single Pokémon (the detail view refetches by id); 404 when unknown or
+ *  not the caller's own. */
+export const getPokemon = (
+  id: string,
+  signal?: AbortSignal,
+): Promise<Pokemon> => apiRequest(`/pokemon/${id}`, pokemonSchema, { signal })
+
 /** `POST /api/pokemon` — register a Pokémon; resolves the created resource with its derived block. */
 export const createPokemon = (input: PokemonInput): Promise<Pokemon> =>
   apiRequest('/pokemon', pokemonSchema, { method: 'POST', body: input })
