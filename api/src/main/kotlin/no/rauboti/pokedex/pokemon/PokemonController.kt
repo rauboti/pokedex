@@ -1,6 +1,9 @@
 package no.rauboti.pokedex.pokemon
 
+import no.rauboti.pokedex.caughtpokemon.domain.CreateCaughtPokemon
+import no.rauboti.pokedex.caughtpokemon.domain.PatchCaughtPokemon
 import no.rauboti.pokedex.common.NotFoundException
+import no.rauboti.pokedex.pokemon.dto.PokemonDto
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -15,39 +18,39 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 /**
- * The caller's Pokémon collection (US1, FR-010). All operations are scoped to the authenticated
- * user's hive `sub`; a by-id read/edit/delete of a row the caller doesn't own is a 404,
- * indistinguishable from an unknown id. Create/edit run the solver and the write invariants in
- * [PokemonService]; every response carries the server-computed derived block.
+ * The caller's Pokémon collection. All operations are scoped to the authenticated user's hive
+ * `sub`; a by-id read/edit/delete of a row the caller doesn't own is a 404, indistinguishable
+ * from an unknown id. Create/edit run the solver and the write invariants in [PokemonService];
+ * every response carries the server-computed derived block.
  */
 @RestController
 class PokemonController(
-    private val pokemon: PokemonService,
+    private val pokemonService: PokemonService,
 ) {
     @GetMapping("/api/pokemon")
     fun list(
         @AuthenticationPrincipal jwt: Jwt,
-    ): List<PokemonDto> = pokemon.list(userId(jwt))
+    ): List<PokemonDto> = pokemonService.list(userId(jwt))
 
     @GetMapping("/api/pokemon/{id}")
     fun get(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable id: UUID,
-    ): PokemonDto = pokemon.get(userId(jwt), id) ?: throw notFound(id)
+    ): PokemonDto = pokemonService.get(userId(jwt), id) ?: throw notFound(id)
 
     @PostMapping("/api/pokemon")
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestBody input: PokemonInput,
-    ): PokemonDto = pokemon.create(userId(jwt), input)
+        @RequestBody input: CreateCaughtPokemon,
+    ): PokemonDto = pokemonService.create(userId(jwt), input)
 
     @PatchMapping("/api/pokemon/{id}")
     fun update(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable id: UUID,
-        @RequestBody patch: PokemonPatch,
-    ): PokemonDto = pokemon.update(userId(jwt), id, patch) ?: throw notFound(id)
+        @RequestBody patch: PatchCaughtPokemon,
+    ): PokemonDto = pokemonService.update(userId(jwt), id, patch) ?: throw notFound(id)
 
     @DeleteMapping("/api/pokemon/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -55,7 +58,7 @@ class PokemonController(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable id: UUID,
     ) {
-        if (!pokemon.delete(userId(jwt), id)) throw notFound(id)
+        if (!pokemonService.delete(userId(jwt), id)) throw notFound(id)
     }
 
     private fun userId(jwt: Jwt): String = requireNotNull(jwt.subject) { "authenticated request without a sub" }

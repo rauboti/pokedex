@@ -12,7 +12,7 @@
 
 ### Session 2026-07-20
 
-- Q: Should mega/temporary battle forms be registrable in US1's species search? → A: Sync them into the catalog but exclude them from registration search (a `registrable` flag on species; search filters on it).
+- Q: Should mega/temporary battle forms be registrable in US1's species search? → A: Sync them into the catalog but exclude them from registration search (a `isRegistrable` flag on species; search filters on it).
 - Q: Is collection data export (JSON/CSV) in scope for v1? → A: Out of scope for v1 — recorded as an explicit future item.
 
 ## User Scenarios & Testing *(mandatory)*

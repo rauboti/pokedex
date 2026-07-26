@@ -4,9 +4,9 @@ import kotlin.math.floor
 import kotlin.math.sqrt
 
 /**
- * The Pokémon GO stat formulas (research D7) — pure functions over base stats, IVs, and a CP
- * multiplier. The single authoritative implementation; the web app does zero stat math. CP and HP
- * both floor and clamp to a minimum of 10 (the game's floors).
+ * The Pokémon GO stat formulas — pure functions over base stats, IVs, and a CP multiplier. The
+ * single authoritative implementation; the web app does zero stat math. CP and HP both floor
+ * and clamp to a minimum of 10 (the game's floors).
  */
 object StatFormulas {
     private const val MIN = 10
@@ -58,7 +58,7 @@ object StatFormulas {
             stamina = (baseSta + ivSta) * cpm,
         )
 
-    /** IV completeness as a percentage of the 45-point max, to one decimal (FR-008). */
+    /** IV completeness as a percentage of the 45-point max, to one decimal. */
     fun ivPercent(
         ivAtk: Int,
         ivDef: Int,

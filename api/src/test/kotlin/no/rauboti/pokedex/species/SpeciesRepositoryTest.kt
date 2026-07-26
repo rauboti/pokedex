@@ -14,7 +14,7 @@ import org.springframework.jdbc.core.simple.JdbcClient
  * needed to exercise search).
  */
 class SpeciesRepositoryTest : IntegrationTest() {
-    @Autowired private lateinit var species: SpeciesRepository
+    @Autowired private lateinit var speciesRepo: SpeciesRepository
 
     @Autowired private lateinit var jdbc: JdbcClient
 
@@ -56,9 +56,9 @@ class SpeciesRepositoryTest : IntegrationTest() {
         seed("VENUSAUR", 3, "Venusaur", null, "Grass", "Poison")
         seed("CHARMANDER", 4, "Charmander", null, "Fire", null)
 
-        assertThat(species.search("venu", 20).map { it.id }).containsExactly("VENUSAUR")
-        assertThat(species.search("VENU", 20).map { it.id }).containsExactly("VENUSAUR")
-        assertThat(species.search("mander", 20).map { it.id }).containsExactly("CHARMANDER")
+        assertThat(speciesRepo.search("venu", 20).map { it.id }).containsExactly("VENUSAUR")
+        assertThat(speciesRepo.search("VENU", 20).map { it.id }).containsExactly("VENUSAUR")
+        assertThat(speciesRepo.search("mander", 20).map { it.id }).containsExactly("CHARMANDER")
     }
 
     @Test
@@ -68,7 +68,7 @@ class SpeciesRepositoryTest : IntegrationTest() {
         seed("PIDGEY", 16, "Pidgey", null, "Normal", "Flying")
 
         // Pidgey (dex 16) before both Rattata rows (dex 19); base Rattata (null form) before Alola.
-        assertThat(species.search("", 20).map { it.id })
+        assertThat(speciesRepo.search("", 20).map { it.id })
             .containsExactly("PIDGEY", "RATTATA", "RATTATA_ALOLA")
     }
 
@@ -77,7 +77,7 @@ class SpeciesRepositoryTest : IntegrationTest() {
         seed("VENUSAUR", 3, "Venusaur", null, "Grass", "Poison")
         seed("VENUSAUR_MEGA", 3, "Venusaur", "Mega", "Grass", "Poison", registrable = false)
 
-        assertThat(species.search("venusaur", 20).map { it.id }).containsExactly("VENUSAUR")
+        assertThat(speciesRepo.search("venusaur", 20).map { it.id }).containsExactly("VENUSAUR")
     }
 
     @Test
@@ -86,8 +86,8 @@ class SpeciesRepositoryTest : IntegrationTest() {
         seed("IVYSAUR", 2, "Ivysaur", null, "Grass", "Poison")
         seed("VENUSAUR", 3, "Venusaur", null, "Grass", "Poison")
 
-        assertThat(species.search("saur", 2)).hasSize(2)
-        assertThat(species.search("saur", 2).map { it.id }).containsExactly("BULBASAUR", "IVYSAUR")
+        assertThat(speciesRepo.search("saur", 2)).hasSize(2)
+        assertThat(speciesRepo.search("saur", 2).map { it.id }).containsExactly("BULBASAUR", "IVYSAUR")
     }
 
     @Test
@@ -95,8 +95,8 @@ class SpeciesRepositoryTest : IntegrationTest() {
         seed("VENUSAUR", 3, "Venusaur", null, "Grass", "Poison")
         seed("CHARMANDER", 4, "Charmander", null, "Fire", null)
 
-        assertThat(species.search("venusaur", 20).single().types).containsExactly("Grass", "Poison")
-        assertThat(species.search("charmander", 20).single().types).containsExactly("Fire")
+        assertThat(speciesRepo.search("venusaur", 20).single().types).containsExactly("Grass", "Poison")
+        assertThat(speciesRepo.search("charmander", 20).single().types).containsExactly("Fire")
     }
 
     @Test
@@ -104,7 +104,7 @@ class SpeciesRepositoryTest : IntegrationTest() {
         seed("MEWTWO", 150, "Mewtwo", null, "Psychic", null, rarity = "Legendary")
         seed("CHARMANDER", 4, "Charmander", null, "Fire", null)
 
-        assertThat(species.search("mewtwo", 20).single().rarity).isEqualTo("Legendary")
-        assertThat(species.search("charmander", 20).single().rarity).isNull()
+        assertThat(speciesRepo.search("mewtwo", 20).single().rarity).isEqualTo("Legendary")
+        assertThat(speciesRepo.search("charmander", 20).single().rarity).isNull()
     }
 }

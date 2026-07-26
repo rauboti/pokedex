@@ -18,7 +18,6 @@ class CpmTableTest {
         assertThat(CpmTable.levels.first()).isEqualTo(1.0)
         assertThat(CpmTable.levels.last()).isEqualTo(51.0)
         assertThat(CpmTable.levels).isSorted()
-        // Every entry is a 0.5 step.
         CpmTable.levels.zipWithNext().forEach { (a, b) ->
             assertThat(b - a).isCloseTo(0.5, within(1e-9))
         }

@@ -1,10 +1,10 @@
 package no.rauboti.pokedex.stats
 
 /**
- * Level projections for the detail view (research D7, FR-009): the Pokémon's CP/HP/effective stats
- * at fixed levels 40 and 50 always, plus a Best-Buddy row at current level + 1 when the flag is set
- * (and that boosted level is still within the 1.0–51.0 table). Best Buddy never alters the stored
- * level — it is a projection only. Pure Kotlin.
+ * Level projections for the detail view: the Pokémon's CP/HP/effective stats at fixed levels 40
+ * and 50 always, plus a Best-Buddy row at current level + 1 when the flag is set (and that
+ * boosted level is still within the 1.0–51.0 table). Best Buddy never alters the stored level —
+ * it is a projection only.
  */
 object Projections {
     enum class ProjectionLabel { L40, L50, BEST_BUDDY }

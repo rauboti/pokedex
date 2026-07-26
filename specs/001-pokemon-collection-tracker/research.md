@@ -79,7 +79,7 @@ freshness" UI (spec edge case).
 check showed **no sibling app uses an HTTP-level mock** (no WireMock/MockWebServer in
 hive, taskmaster, pulse, or avec's shipped code — all mock external HTTP clients at
 the interface level with MockK, avec's `HiveTokenClient` pattern). Pokedex follows
-suit and the maintainer's MockK preference: `GamedataClient` is an interface;
+suit and the maintainer's MockK preference: `GamedataClientImplementation` is an interface;
 `GamedataNormalizer` is pure and tested against committed fixture JSON captured from
 the real feed (covers deserialization without any HTTP server); `SyncService` tests
 stub the client with MockK; the live source is exercised manually at the Phase 2

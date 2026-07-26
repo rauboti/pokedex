@@ -1,5 +1,7 @@
 package no.rauboti.pokedex.pokemon
 
+import no.rauboti.pokedex.caughtpokemon.CaughtPokemonService
+import no.rauboti.pokedex.caughtpokemon.domain.CaughtBasePokemon
 import no.rauboti.pokedex.support.IntegrationTest
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -17,7 +19,7 @@ import java.time.LocalDate
  * and nullable move-slot FKs round-trip; `listAll` + `markStale` back T018's rescan.
  */
 class CaughtPokemonRepositoryTest : IntegrationTest() {
-    @Autowired private lateinit var repo: CaughtPokemonRepository
+    @Autowired private lateinit var caughtPokemonService: CaughtPokemonService
 
     @Autowired private lateinit var jdbc: JdbcClient
 
@@ -54,7 +56,7 @@ class CaughtPokemonRepositoryTest : IntegrationTest() {
         stale: Boolean = false,
         fastMoveId: String? = null,
         caughtAt: LocalDate? = LocalDate.of(2026, 7, 10),
-    ) = NewCaughtPokemon(
+    ) = CaughtBasePokemon(
         userId = userId,
         speciesId = "VENUSAUR",
         ivAtk = ivAtk,
@@ -69,9 +71,9 @@ class CaughtPokemonRepositoryTest : IntegrationTest() {
 
     @Test
     fun `insert then find round-trips every field`() {
-        val saved = repo.insert(newPokemon(fastMoveId = "VINE_WHIP_FAST"))
+        val saved = caughtPokemonService.save(newPokemon(fastMoveId = "VINE_WHIP_FAST"))
 
-        val found = repo.findByIdAndUser(saved.id, userA)
+        val found = caughtPokemonService.findByUserIdAndId(saved.id, userA)
         assertThat(found).isNotNull
         assertThat(found!!.speciesId).isEqualTo("VENUSAUR")
         assertThat(found.ivAtk).isEqualTo(15)
@@ -85,68 +87,68 @@ class CaughtPokemonRepositoryTest : IntegrationTest() {
 
     @Test
     fun `reads are scoped to the owner`() {
-        val a = repo.insert(newPokemon(userId = userA))
-        repo.insert(newPokemon(userId = userB))
+        val a = caughtPokemonService.save(newPokemon(userId = userA))
+        caughtPokemonService.save(newPokemon(userId = userB))
 
-        assertThat(repo.listByUser(userA).map { it.id }).containsExactly(a.id)
-        // A's row is invisible to B — findByIdAndUser with the wrong owner yields null (404-worthy).
-        assertThat(repo.findByIdAndUser(a.id, userB)).isNull()
+        assertThat(caughtPokemonService.findByUserId(userA).map { it.id }).containsExactly(a.id)
+        // A's row is invisible to B — findByUserIdAndId with the wrong owner yields null (404-worthy).
+        assertThat(caughtPokemonService.findByUserIdAndId(a.id, userB)).isNull()
     }
 
     @Test
     fun `update changes fields for the owner and is a no-op for a non-owner`() {
-        val saved = repo.insert(newPokemon(userId = userA, cp = 2087, stale = false))
+        val saved = caughtPokemonService.save(newPokemon(userId = userA, cp = 2087, stale = false))
 
-        val updated = repo.update(saved.copy(cp = 2100, level = 26.0, stale = true))
+        val updated = caughtPokemonService.update(saved.copy(cp = 2100, level = 26.0, stale = true))
         assertThat(updated).isNotNull
         assertThat(updated!!.cp).isEqualTo(2100)
         assertThat(updated.level).isEqualTo(26.0)
         assertThat(updated.stale).isTrue()
 
         // A different owner can't update the row.
-        assertThat(repo.update(saved.copy(userId = userB, cp = 9999))).isNull()
-        assertThat(repo.findByIdAndUser(saved.id, userA)!!.cp).isEqualTo(2100)
+        assertThat(caughtPokemonService.update(saved.copy(userId = userB, cp = 9999))).isNull()
+        assertThat(caughtPokemonService.findByUserIdAndId(saved.id, userA)!!.cp).isEqualTo(2100)
     }
 
     @Test
     fun `delete removes the owner's row and is a no-op for a non-owner`() {
-        val saved = repo.insert(newPokemon(userId = userA))
+        val saved = caughtPokemonService.save(newPokemon(userId = userA))
 
-        assertThat(repo.delete(saved.id, userB)).isFalse()
-        assertThat(repo.findByIdAndUser(saved.id, userA)).isNotNull()
+        assertThat(caughtPokemonService.delete(saved.id, userB)).isFalse()
+        assertThat(caughtPokemonService.findByUserIdAndId(saved.id, userA)).isNotNull()
 
-        assertThat(repo.delete(saved.id, userA)).isTrue()
-        assertThat(repo.findByIdAndUser(saved.id, userA)).isNull()
+        assertThat(caughtPokemonService.delete(saved.id, userA)).isTrue()
+        assertThat(caughtPokemonService.findByUserIdAndId(saved.id, userA)).isNull()
     }
 
     @Test
     fun `the DB rejects an out-of-range IV`() {
-        assertThatThrownBy { repo.insert(newPokemon(ivAtk = 16)) }
+        assertThatThrownBy { caughtPokemonService.save(newPokemon(ivAtk = 16)) }
             .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
     @Test
     fun `the DB rejects a CP below the floor`() {
-        assertThatThrownBy { repo.insert(newPokemon(cp = 9)) }
+        assertThatThrownBy { caughtPokemonService.save(newPokemon(cp = 9)) }
             .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
     @Test
     fun `the stale flag round-trips and markStale flips it for the listed ids`() {
-        val fresh = repo.insert(newPokemon(userId = userA, stale = false))
-        val alreadyStale = repo.insert(newPokemon(userId = userA, stale = true))
-        assertThat(repo.findByIdAndUser(alreadyStale.id, userA)!!.stale).isTrue()
+        val fresh = caughtPokemonService.save(newPokemon(userId = userA, stale = false))
+        val alreadyStale = caughtPokemonService.save(newPokemon(userId = userA, stale = true))
+        assertThat(caughtPokemonService.findByUserIdAndId(alreadyStale.id, userA)!!.stale).isTrue()
 
-        repo.markStale(listOf(fresh.id))
+        caughtPokemonService.markAsStale(listOf(fresh.id))
 
-        assertThat(repo.findByIdAndUser(fresh.id, userA)!!.stale).isTrue()
+        assertThat(caughtPokemonService.findByUserIdAndId(fresh.id, userA)!!.stale).isTrue()
     }
 
     @Test
     fun `listAll returns every user's rows (for the post-sync rescan)`() {
-        repo.insert(newPokemon(userId = userA))
-        repo.insert(newPokemon(userId = userB))
+        caughtPokemonService.save(newPokemon(userId = userA))
+        caughtPokemonService.save(newPokemon(userId = userB))
 
-        assertThat(repo.listAll()).hasSize(2)
+        assertThat(caughtPokemonService.findAll()).hasSize(2)
     }
 }

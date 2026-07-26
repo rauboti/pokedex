@@ -3,7 +3,7 @@ package no.rauboti.pokedex.common
 /**
  * Base for pokedex's domain exceptions, carrying the RFC-7807 pair the web app needs:
  * [message] becomes the human-readable `detail`, [code] the stable machine-readable
- * identifier the frontend keys on (the web Zod `Problem` schema carries `code`, T011) —
+ * identifier the frontend keys on (the web Zod `Problem` schema carries `code`) —
  * e.g. `unknown-species`, `impossible-combination`, `level-not-a-candidate`,
  * `move-not-in-pool`, `gamedata-unavailable`.
  */
@@ -34,7 +34,7 @@ class ForbiddenException(
 /**
  * 422 — the input is well-formed but cannot be processed: an impossible species/IV/CP
  * combination, a level not among the solver's candidates, a non-registrable species, or a
- * move outside the species pool (SC-004; pokedex's divergence from avec's 409).
+ * move outside the species pool (pokedex's divergence from avec's 409).
  */
 class UnprocessableException(
     code: String,

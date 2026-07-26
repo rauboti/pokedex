@@ -1,19 +1,18 @@
 -- TABLES
 
--- Caught Pokémon: one registered Pokémon owned by exactly one player (data-model.md).
--- `user_id` is the hive JWT `sub` claim — every read is user-scoped (FR-014) and it
--- is never exposed in responses. `species_id` must exist in the synced catalog
--- (unknown species unregistrable — spec edge case); non-registrable (mega) species
--- are rejected in the service layer, not here (write invariant 0).
+-- Registered Pokémon: one registered Pokémon owned by exactly one player (data-model.md).
+-- `user_id` is the hive JWT `sub` claim — every read is user-scoped and it is never
+-- exposed in responses. `species_id` must exist in the synced catalog (unknown species
+-- unregistrable — spec edge case); non-registrable (mega) species are rejected in the
+-- service layer, not here (write invariant 0).
 --
--- `level` is a derived cache: written only by the API after solver confirmation
--- (FR-002/FR-003), user-picked among candidates on a CP collision, stored as
--- half-steps (app-enforced). `stale` is set by the post-sync rescan when CP+IVs no
--- longer yield `level` (FR-013/SC-005) and cleared by a re-deriving edit. `shadow`
--- and `best_buddy` are display/projection flags only and never alter stored stats
--- (spec edge cases). The move-slot FKs point at `move` (not `species_move`) so a
--- recorded move survives a pool change; NULL = unrecorded. All derived values (HP,
--- effective stats, IV%, projections) are computed on read, never stored.
+-- `level` is a derived cache: written only by the API after solver confirmation,
+-- user-picked among candidates on a CP collision, stored as half-steps (app-enforced).
+-- `stale` is set by the post-sync rescan when CP+IVs no longer yield `level` and cleared
+-- by a re-deriving edit. `shadow` and `best_buddy` are display/projection flags only and
+-- never alter stored stats (spec edge cases). The move-slot FKs point at `move` (not
+-- `species_move`) so a recorded move survives a pool change; NULL = unrecorded. All
+-- derived values (HP, effective stats, IV%, projections) are computed on read, never stored.
 create table caught_pokemon (
     id                uuid          primary key default gen_random_uuid(),
     user_id           text          not null,

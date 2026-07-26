@@ -5,8 +5,8 @@ package no.rauboti.pokedex.auth
  * only the session cookie — every token and the one-time login secrets live on the [jakarta.servlet.http.HttpSession].
  *
  * Centralised here because the collaborators share them: [no.rauboti.pokedex.config.SessionTokenAuthenticationFilter]
- * reads/renews [ACCESS_TOKEN]/[REFRESH_TOKEN] on every API request (T008), and `AuthController`
- * writes the OAuth keys across the Authorization-Code + PKCE dance (T009).
+ * reads/renews [ACCESS_TOKEN]/[REFRESH_TOKEN] on every API request, and `AuthController` writes
+ * the OAuth keys across the Authorization-Code + PKCE dance.
  */
 object SessionKeys {
     /** CSRF `state` minted at `/auth/login`, verified at `/auth/callback` (one-time). */

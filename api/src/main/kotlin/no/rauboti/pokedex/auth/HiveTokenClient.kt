@@ -17,11 +17,10 @@ data class HiveTokens(
 )
 
 /**
- * Talks to hive's `POST {internal-url}/oauth2/token` (`client_secret_post`; research D1):
- * [exchange] redeems an authorization code (Authorization-Code + PKCE, from the login controller in
- * T009), [refresh] renews a session with the rotating refresh token (from
- * [no.rauboti.pokedex.config.SessionTokenAuthenticationFilter], T008). Both return the new
- * [HiveTokens]. Any transport failure or unusable response is surfaced as
+ * Talks to hive's `POST {internal-url}/oauth2/token` (`client_secret_post`): [exchange] redeems
+ * an authorization code (Authorization-Code + PKCE), [refresh] renews a session with the rotating
+ * refresh token (from [no.rauboti.pokedex.config.SessionTokenAuthenticationFilter]). Both return
+ * the new [HiveTokens]. Any transport failure or unusable response is surfaced as
  * [no.rauboti.pokedex.common.HiveUnavailableException] — the "hive unreachable" path; for a refresh
  * it also signals the session can no longer be renewed silently (fall back to login).
  */

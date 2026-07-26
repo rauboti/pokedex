@@ -3,10 +3,10 @@ package no.rauboti.pokedex.stats
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * The vendored power-up stardust cost per level (research D6), loaded from the classpath resource
- * `reference/dust.json`. Used only to label CP-collision candidates by dust cost (US1 scenario 4).
- * Covers the power-up-from levels 1.0–49.5; there is no cost beyond the level cap, so [dust] returns
- * null for level 50 and above. Pure Kotlin — no Spring.
+ * The vendored power-up stardust cost per level, loaded from the classpath resource
+ * `reference/dust.json`. Used only to label CP-collision candidates by dust cost. Covers the
+ * power-up-from levels 1.0–49.5; there is no cost beyond the level cap, so [dust] returns null
+ * for level 50 and above. Pure Kotlin — no Spring.
  */
 object DustTable {
     private val byHalfStep: Map<Int, Int>
