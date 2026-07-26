@@ -5,7 +5,7 @@ import no.rauboti.pokedex.common.NotFoundException
 import no.rauboti.pokedex.derivation.domain.DerivationCandidate
 import no.rauboti.pokedex.derivation.domain.DerivationRequest
 import no.rauboti.pokedex.derivation.domain.DerivationResult
-import no.rauboti.pokedex.species.SpeciesRepository
+import no.rauboti.pokedex.species.SpeciesService
 import no.rauboti.pokedex.stats.CpmTable
 import no.rauboti.pokedex.stats.DustTable
 import no.rauboti.pokedex.stats.LevelSolver
@@ -21,12 +21,12 @@ import org.springframework.stereotype.Service
  */
 @Service
 class DerivationService(
-    private val speciesRepo: SpeciesRepository,
+    private val speciesService: SpeciesService,
 ) {
     fun derive(request: DerivationRequest): DerivationResult {
         validate(request)
         val found =
-            speciesRepo.findById(request.speciesId)
+            speciesService.findById(request.speciesId)
                 ?: throw NotFoundException("unknown-species", "No species with id '${request.speciesId}'")
 
         val candidates =

@@ -14,7 +14,7 @@ import no.rauboti.pokedex.move.dto.MoveDto
 import no.rauboti.pokedex.move.dto.MoveSetDto
 import no.rauboti.pokedex.pokemon.dto.FlagsDto
 import no.rauboti.pokedex.pokemon.dto.PokemonDto
-import no.rauboti.pokedex.species.SpeciesRepository
+import no.rauboti.pokedex.species.SpeciesService
 import no.rauboti.pokedex.species.domain.Species
 import no.rauboti.pokedex.stats.CpmTable
 import no.rauboti.pokedex.stats.LevelSolver
@@ -36,12 +36,12 @@ import java.util.UUID
 class PokemonService(
     private val caughtPokemonService: CaughtPokemonService,
     private val moveService: MoveService,
-    private val speciesRepo: SpeciesRepository,
+    private val speciesService: SpeciesService,
 ) {
     fun list(userId: String): List<PokemonDto> {
         val rows = caughtPokemonService.findByUserId(userId)
         if (rows.isEmpty()) return emptyList()
-        val speciesById = speciesRepo.findByIds(rows.map { it.speciesId }.toSet()).associateBy { it.id }
+        val speciesById = speciesService.findByIds(rows.map { it.speciesId }.toSet()).associateBy { it.id }
         val movesById = moveService.findByIds(rows.flatMap { it.recordedMoveIds() }.toSet()).associateBy { it.id }
         return rows.map { assemble(it, speciesById.getValue(it.speciesId), movesById) }
     }
@@ -51,7 +51,7 @@ class PokemonService(
         id: UUID,
     ): PokemonDto? {
         val row = caughtPokemonService.findByUserIdAndId(id, userId) ?: return null
-        val species = speciesRepo.findById(row.speciesId) ?: return null
+        val species = speciesService.findById(row.speciesId) ?: return null
         return assemble(row, species, movesById(row.recordedMoveIds()))
     }
 
@@ -61,7 +61,7 @@ class PokemonService(
     ): PokemonDto {
         validateIvsCp(input.ivAtk, input.ivDef, input.ivSta, input.cp)
         val species =
-            speciesRepo.findById(input.speciesId)
+            speciesService.findById(input.speciesId)
                 ?: throw NotFoundException("unknown-species", "No species with id '${input.speciesId}'")
         requireRegistrable(input.speciesId)
         val level = confirmLevel(species, input.ivAtk, input.ivDef, input.ivSta, input.cp, input.level)
@@ -105,7 +105,7 @@ class PokemonService(
         val ivSta = patch.ivSta ?: existing.ivSta
         val cp = patch.cp ?: existing.cp
         val species =
-            speciesRepo.findById(speciesId)
+            speciesService.findById(speciesId)
                 ?: throw NotFoundException("unknown-species", "No species with id '$speciesId'")
         if (patch.speciesId != null) requireRegistrable(speciesId)
 
@@ -175,7 +175,7 @@ class PokemonService(
     }
 
     private fun requireRegistrable(speciesId: String) {
-        if (speciesRepo.registrable(speciesId) != true) {
+        if (speciesService.isRegistrable(speciesId) != true) {
             throw UnprocessableException(
                 "species-not-registrable",
                 "Species '$speciesId' cannot be registered (a mega or temporary battle form)",

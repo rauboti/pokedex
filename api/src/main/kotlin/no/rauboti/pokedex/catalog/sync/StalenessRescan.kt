@@ -1,7 +1,7 @@
 package no.rauboti.pokedex.catalog.sync
 
 import no.rauboti.pokedex.caughtpokemon.CaughtPokemonService
-import no.rauboti.pokedex.species.SpeciesRepository
+import no.rauboti.pokedex.species.SpeciesService
 import no.rauboti.pokedex.stats.LevelSolver
 import org.springframework.stereotype.Component
 
@@ -19,12 +19,12 @@ import org.springframework.stereotype.Component
 @Component
 class StalenessRescan(
     private val caughtPokemonService: CaughtPokemonService,
-    private val speciesRepo: SpeciesRepository,
+    private val speciesService: SpeciesService,
 ) {
     fun rescan() {
         val rows = caughtPokemonService.findAll().filterNot { it.stale } // already-flagged rows need no recheck
         if (rows.isEmpty()) return
-        val speciesById = speciesRepo.findByIds(rows.map { it.speciesId }.toSet()).associateBy { it.id }
+        val speciesById = speciesService.findByIds(rows.map { it.speciesId }.toSet()).associateBy { it.id }
 
         val staleIds =
             rows

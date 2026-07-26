@@ -2,7 +2,7 @@ package no.rauboti.pokedex.catalog
 
 import no.rauboti.pokedex.catalog.sync.SyncService
 import no.rauboti.pokedex.common.GamedataUnavailableException
-import no.rauboti.pokedex.species.SpeciesRepository
+import no.rauboti.pokedex.species.SpeciesService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -19,17 +19,17 @@ import org.springframework.stereotype.Component
 @Component
 class CatalogInitializer(
     private val syncService: SyncService,
-    private val speciesRepo: SpeciesRepository,
+    private val speciesService: SpeciesService,
     @param:Value("\${pokedex.gamedata.sync-on-startup:true}") private val syncOnStartup: Boolean,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @EventListener(ApplicationReadyEvent::class)
     fun syncWhenEmpty() {
-        if (!syncOnStartup || speciesRepo.count() > 0) return
+        if (!syncOnStartup || speciesService.count() > 0) return
         try {
             syncService.sync()
-            log.info("Startup catalog sync complete ({} species)", speciesRepo.count())
+            log.info("Startup catalog sync complete ({} species)", speciesService.count())
         } catch (e: GamedataUnavailableException) {
             log.warn("Startup catalog sync skipped — game-data source unavailable: {}", e.message)
         }

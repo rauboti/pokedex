@@ -113,7 +113,7 @@ class SpeciesRepository(
     }
 
     /** The registrable flag for a species (write invariant 0), or null if the id is unknown. */
-    fun registrable(id: String): Boolean? =
+    fun isRegistrable(id: String): Boolean? =
         jdbc
             .sql("SELECT registrable FROM species WHERE id = :id")
             .param("id", id)

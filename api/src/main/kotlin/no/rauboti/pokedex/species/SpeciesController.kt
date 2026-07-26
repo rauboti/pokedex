@@ -1,7 +1,7 @@
 package no.rauboti.pokedex.species
 
 import no.rauboti.pokedex.common.BadRequestException
-import no.rauboti.pokedex.species.SpeciesRepository
+import no.rauboti.pokedex.species.SpeciesService
 import no.rauboti.pokedex.species.domain.Species
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 class SpeciesController(
-    private val speciesRepo: SpeciesRepository,
+    private val speciesService: SpeciesService,
 ) {
     @GetMapping("/api/species")
     fun search(
@@ -24,7 +24,7 @@ class SpeciesController(
         if (q.isBlank()) {
             throw BadRequestException("invalid-query", "q must be a non-blank search term")
         }
-        return speciesRepo.search(q.trim(), limit.coerceIn(1, MAX_LIMIT))
+        return speciesService.search(q.trim(), limit.coerceIn(1, MAX_LIMIT))
     }
 
     private companion object {
