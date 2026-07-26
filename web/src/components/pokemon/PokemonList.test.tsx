@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { ThemeProvider } from '@rauboti/ui'
 import { PokemonList } from './PokemonList'
 import type { Pokemon, Species } from '@/api/schemas'
@@ -60,7 +61,9 @@ const mk = (over: Partial<Pokemon> = {}): Pokemon => ({
 const renderList = (props: Parameters<typeof PokemonList>[0]) =>
   render(
     <ThemeProvider>
-      <PokemonList {...props} />
+      <MemoryRouter>
+        <PokemonList {...props} />
+      </MemoryRouter>
     </ThemeProvider>,
   )
 
@@ -71,6 +74,14 @@ describe('PokemonList', () => {
     })
     expect(screen.getByRole('img', { name: 'Grass' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Poison' })).toBeInTheDocument()
+  })
+
+  it('links each row name to its detail page', () => {
+    renderList({ pokemon: [mk({ id: 'abc' })] })
+    expect(screen.getByRole('link', { name: /venusaur/i })).toHaveAttribute(
+      'href',
+      '/pokemon/abc',
+    )
   })
 
   it('flags a stale row with a re-check badge', () => {

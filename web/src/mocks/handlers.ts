@@ -131,6 +131,12 @@ const makePokemonHandlers = (): RequestHandler[] => {
 
   return [
     http.get('/api/pokemon', () => HttpResponse.json(store)),
+    http.get('/api/pokemon/:id', ({ params }) => {
+      const { id } = params as { id: string }
+      const hit = store.find((p) => p.id === id)
+      if (!hit) return problem(404, 'Not Found', 'pokemon-not-found')
+      return HttpResponse.json(hit)
+    }),
     http.post('/api/pokemon', async ({ request }) => {
       const input = (await request.json()) as PokemonInput
       const created = build(`mock-${nextId++}`, input)

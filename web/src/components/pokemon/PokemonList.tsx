@@ -1,4 +1,10 @@
-import { Center, HStack, Stack, Text } from '@chakra-ui/react'
+import {
+  Center,
+  HStack,
+  Link as ChakraLink,
+  Stack,
+  Text,
+} from '@chakra-ui/react'
 import {
   Badge,
   Button,
@@ -8,6 +14,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@rauboti/ui'
+import { Link as RouterLink } from 'react-router'
 import type { Pokemon } from '@/api/schemas'
 import { IvStars } from './IvStars'
 import { PokemonAttributes } from './PokemonAttributes'
@@ -24,7 +31,11 @@ import { TypeBadge } from './TypeBadge'
  * DTO (the web app does no stat math, research D7). IV quality shows as a Pokémon GO-style star rating
  * ([IvStars] — yellow stars by band, one pink star for a perfect catch, US3) rather than a raw number.
  * A rebalanced (`stale`) row wears a "re-check" badge (FR-013) and its edit action reads "Re-enter".
- * Kept as a `ul`/`li` list for semantics; cards are presentational here (detail view lands US3, T025).
+ * The whole card links to that Pokémon's detail page (`/pokemon/:id`, US3/T025) via a stretched link:
+ * the name is the real (keyboard-focusable, screen-reader) anchor, and its `::after` overlays the card
+ * so a click anywhere navigates — while the edit/delete actions are raised above the overlay
+ * (`zIndex`) so they keep working. The `interactive` Card variant gives the whole card its hover/cursor
+ * affordance (DS tokens). Kept as a `ul`/`li` list for semantics.
  *
  * When the list is empty it renders one of two empty states: `filtered` distinguishes "your filters
  * match nothing" from "you have registered nothing yet". `onEdit`/`onDelete` add per-card actions; a
@@ -61,12 +72,21 @@ export const PokemonList = ({
   return (
     <Grid as="ul" autoFill minChildWidth="13rem">
       {pokemon.map((p) => (
-        <Card as="li" key={p.id}>
+        <Card as="li" key={p.id} interactive position="relative">
           <Stack gap="2">
             {/* Row 1: name (left) + types (right) */}
             <HStack justify="space-between" wrap="wrap" gap="2">
               <HStack gap="2" wrap="wrap" minW="0">
-                <Text fontWeight="semibold">{displayName(p.species)}</Text>
+                <ChakraLink
+                  asChild
+                  fontWeight="semibold"
+                  _hover={{ textDecoration: 'underline' }}
+                  _after={{ content: '""', position: 'absolute', inset: 0 }}
+                >
+                  <RouterLink to={`/pokemon/${p.id}`}>
+                    {displayName(p.species)}
+                  </RouterLink>
+                </ChakraLink>
                 {p.stale && <Badge type="warning">Needs re-check</Badge>}
               </HStack>
               <HStack gap="1">
@@ -101,7 +121,7 @@ export const PokemonList = ({
                 perfect={p.derived.perfect}
               />
               {(onEdit || onDelete) && (
-                <HStack gap="1">
+                <HStack gap="1" position="relative" zIndex="1">
                   {onEdit && (
                     <Button
                       size="sm"

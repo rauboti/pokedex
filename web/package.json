@@ -19,6 +19,8 @@
     "@chakra-ui/react": "^3.36.0",
     "@emotion/react": "^11.14.0",
     "@rauboti/ui": "^0.4.8",
+    "highcharts": "^13.0.0",
+    "highcharts-react-official": "^3.2.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router": "^7.18.0",
