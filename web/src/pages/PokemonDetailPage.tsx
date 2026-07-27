@@ -17,6 +17,7 @@ import { PokemonSprite } from '@/components/pokemon/PokemonSprite'
 import { TypeBadge } from '@/components/pokemon/TypeBadge'
 import { StatsPanel } from '@/components/detail/StatsPanel'
 import { ProjectionsPanel } from '@/components/detail/ProjectionsPanel'
+import { MatchupPanel } from '@/components/detail/MatchupPanel'
 
 /**
  * The Pokémon detail page (`/pokemon/:id`, US3). Refetches the Pokémon by id — the collection row
@@ -125,6 +126,7 @@ export const PokemonDetailPage = () => {
 
       <StatsPanel pokemon={pokemon} />
       <ProjectionsPanel projections={pokemon.derived.projections} />
+      <MatchupPanel types={species.types} />
 
       <BackLink />
     </Stack>

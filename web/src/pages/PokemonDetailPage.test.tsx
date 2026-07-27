@@ -115,6 +115,10 @@ describe('PokemonDetailPage', () => {
     const proj = screen.getByRole('region', { name: 'Projections' })
     expect(within(proj).getByText('L40')).toBeInTheDocument()
     expect(within(proj).getByText('L50')).toBeInTheDocument()
+    // Type matchups panel is wired in from the species' types (US4).
+    expect(
+      screen.getByRole('region', { name: 'Type matchups' }),
+    ).toBeInTheDocument()
   })
 
   test('renders the Best Buddy projection row for a Best-Buddy Pokémon', async () => {
