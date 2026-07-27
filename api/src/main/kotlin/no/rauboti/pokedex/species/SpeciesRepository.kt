@@ -1,6 +1,7 @@
 package no.rauboti.pokedex.species
 
 import no.rauboti.pokedex.catalog.sync.domain.NormalizedSpecies
+import no.rauboti.pokedex.move.domain.RecommendedMoveIds
 import no.rauboti.pokedex.species.domain.Species
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
@@ -110,6 +111,43 @@ class SpeciesRepository(
             ).param("ids", ids)
             .query { rs, _ -> mapSpecies(rs) }
             .list()
+    }
+
+    /**
+     * The recommended-moveset ids stored on a species, or null if the species does not exist —
+     * lets the moves endpoint tell 404 (no such species) from a species with no recommendation yet
+     * (both ids null). The write path is [updateRecommendedMoves], run after each sync.
+     */
+    fun findRecommendedMoveIds(id: String): RecommendedMoveIds? =
+        jdbc
+            .sql(
+                "SELECT recommended_fast_move_id, recommended_charged_move_id FROM species WHERE id = :id",
+            ).param("id", id)
+            .query { rs, _ ->
+                RecommendedMoveIds(
+                    rs.getString("recommended_fast_move_id"),
+                    rs.getString("recommended_charged_move_id"),
+                )
+            }.optional()
+            .orElse(null)
+
+    /** Store (or clear, with nulls) a species' sync-computed recommended moveset. */
+    fun updateRecommendedMoves(
+        speciesId: String,
+        fastMoveId: String?,
+        chargedMoveId: String?,
+    ) {
+        jdbc
+            .sql(
+                """
+                UPDATE species
+                SET recommended_fast_move_id = :fast, recommended_charged_move_id = :charged
+                WHERE id = :id
+                """.trimIndent(),
+            ).param("id", speciesId)
+            .param("fast", fastMoveId)
+            .param("charged", chargedMoveId)
+            .update()
     }
 
     /** The registrable flag for a species (write invariant 0), or null if the id is unknown. */

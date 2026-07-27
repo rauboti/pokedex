@@ -197,6 +197,19 @@ assumption; excluding legacy moves — gives wrong answers for the very species 
 check first; computing on every read — recomputation is only meaningful after a sync,
 so sync time is the natural cache point.
 
+**Amendment (2026-07-27, T028 implementation finding — resolve in T034):** pure cycle
+DPS over real feed stats reproduces the community-listed **charged** move for every
+species checked, but *not always the fast move* — it over-rewards short, high-energy
+fast moves. Swampert → Water Gun + Hydro Cannon (community: Mud Shot); Metagross →
+Fury Cutter + Meteor Mash (community: Bullet Punch); Machamp → Karate Chop + Dynamic
+Punch (community: Counter). No single *simple* metric reproduces every community fast
+move (Swampert wants the higher-energy fast, Metagross the STAB fast — opposite pulls),
+so the heuristic was left as D8 specifies rather than tuned to a test set. SC-007 is
+therefore charged-move-anchored, asserting the full pair only where cycle DPS and
+community agree unambiguously (Rampardos, Electivire — see `MovesetRankerTest`). Decide
+in T034 whether to (a) accept charged-anchored as the SC-007 bar, or (b) refine D8 to a
+DPS+energy/STAB-weighted metric.
+
 ## D9. Rebalance detection (new — FR-013)
 
 **Decision**: `caught_pokemon` caches the derived `level` and carries a `stale`
