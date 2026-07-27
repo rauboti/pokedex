@@ -8,11 +8,11 @@ import { server } from '@/mocks/server'
 import type { Move, Pokemon, PokemonPatch } from '@/api/schemas'
 
 /**
- * The detail-view moves panel: pick fast/charged moves from the species pool (legacy marked "not
- * currently obtainable"), compare the recorded set against the sync-recommended one, and save the edit.
- * The pool comes from `GET /api/species/{id}/moves` (MSW-backed; Venusaur is seeded with a legacy
- * Frenzy Plant + a recommendation). No moves recorded → an explicit unrecorded state, never a guessed
- * set.
+ * The detail-view moves panel. Two side-by-side type/move tables (Recommended vs Actual) with a
+ * match/mismatch verdict and an explicit unrecorded state; a pencil opens a modal that edits the
+ * set from the species pool (legacy marked "not currently obtainable"), with a 1-or-2 charged-slot
+ * toggle. The pool comes from `GET /api/species/{id}/moves` (MSW-backed; Venusaur is seeded with
+ * a legacy Frenzy Plant + a recommendation of Vine Whip + Frenzy Plant).
  */
 
 const move = (
@@ -21,13 +21,7 @@ const move = (
   type: string,
   fast: boolean,
   legacy = false,
-): Move => ({
-  id,
-  name,
-  type,
-  fast,
-  ...(legacy ? { legacy } : {}),
-})
+): Move => ({ id, name, type, fast, ...(legacy ? { legacy } : {}) })
 
 const venusaur = (moves: Pokemon['moves']): Pokemon => ({
   id: 'venu',
@@ -85,18 +79,72 @@ const renderPanel = (pokemon: Pokemon, onSaved = vi.fn()) => {
   return onSaved
 }
 
-const panel = () => screen.getByRole('region', { name: 'Moves' })
-const openCombobox = async (name: RegExp) => {
-  const input = within(panel()).getByRole('combobox', { name })
-  await userEvent.click(input)
-  await userEvent.keyboard('{ArrowDown}') // click alone doesn't open this combobox's listbox
-  return input
+const region = (name: string) => screen.getByRole('region', { name })
+
+const openEditor = async () => {
+  await userEvent.click(
+    await screen.findByRole('button', { name: /edit moves/i }),
+  )
+  return screen.findByRole('dialog')
 }
 
-describe('MovesPanel', () => {
-  test('fast/charged selects offer only the species pool, split by kind', async () => {
+const openCombobox = async (root: HTMLElement, name: RegExp) => {
+  await userEvent.click(within(root).getByRole('combobox', { name }))
+  await userEvent.keyboard('{ArrowDown}') // click alone doesn't open the listbox
+}
+
+describe('MovesPanel — summary tables', () => {
+  test('renders the recommended moveset in its own table, marking the legacy move', async () => {
     renderPanel(venusaur(NONE))
-    await openCombobox(/^fast move/i)
+    const recommended = region('Recommended')
+    expect(
+      await within(recommended).findByText(/vine whip/i),
+    ).toBeInTheDocument()
+    expect(within(recommended).getByText(/frenzy plant/i)).toHaveTextContent(
+      /not currently obtainable/i,
+    )
+  })
+
+  test('renders the actual recorded moves in the Actual table', () => {
+    renderPanel(venusaur(RECOMMENDED))
+    const actual = region('Actual')
+    expect(within(actual).getByText(/vine whip/i)).toBeInTheDocument()
+    expect(within(actual).getByText(/frenzy plant/i)).toBeInTheDocument()
+  })
+
+  test('shows an explicit unrecorded state in the Actual table when nothing is recorded', () => {
+    renderPanel(venusaur(NONE))
+    expect(
+      within(region('Actual')).getByText(/no moves recorded/i),
+    ).toBeInTheDocument()
+  })
+
+  test('flags a match when the recorded set equals the recommendation', async () => {
+    renderPanel(venusaur(RECOMMENDED))
+    expect(
+      await screen.findByText(/matches the recommendation/i),
+    ).toBeInTheDocument()
+  })
+
+  test('flags a mismatch when the recorded set differs', async () => {
+    renderPanel(
+      venusaur({
+        fast: move('RAZOR_LEAF_FAST', 'Razor Leaf', 'Grass', true),
+        charged1: move('SLUDGE_BOMB', 'Sludge Bomb', 'Poison', false),
+        charged2: null,
+      }),
+    )
+    expect(
+      await screen.findByText(/differs from the recommendation/i),
+    ).toBeInTheDocument()
+  })
+})
+
+describe('MovesPanel — edit modal', () => {
+  test('the pencil opens a modal whose selects offer only the species pool', async () => {
+    renderPanel(venusaur(NONE))
+    const dialog = await openEditor()
+    await openCombobox(dialog, /^fast move/i)
     const fastOptions = (await screen.findAllByRole('option')).map(
       (o) => o.textContent,
     )
@@ -106,75 +154,41 @@ describe('MovesPanel', () => {
         expect.stringMatching(/razor leaf/i),
       ]),
     )
-    // A charged move must never appear in the fast select.
     expect(fastOptions.some((t) => /sludge bomb/i.test(t ?? ''))).toBe(false)
   })
 
   test('a legacy move is marked "not currently obtainable" in the charged select', async () => {
     renderPanel(venusaur(NONE))
-    await openCombobox(/^charged move/i)
-    const frenzyPlant = await screen.findByRole('option', {
-      name: /frenzy plant/i,
-    })
-    expect(frenzyPlant).toHaveTextContent(/not currently obtainable/i)
-    // A non-legacy move carries no such marker.
+    const dialog = await openEditor()
+    await openCombobox(dialog, /^charged move 1/i)
     expect(
-      screen.getByRole('option', { name: /power whip/i }),
-    ).not.toHaveTextContent(/not currently obtainable/i)
+      await screen.findByRole('option', { name: /frenzy plant/i }),
+    ).toHaveTextContent(/not currently obtainable/i)
   })
 
-  test('shows an explicit unrecorded state and no match verdict when nothing is recorded', async () => {
+  test('the charged-count segmented control reveals the second charged select on 2', async () => {
     renderPanel(venusaur(NONE))
+    const dialog = await openEditor()
     expect(
-      await within(panel()).findByText(/no moves recorded/i),
+      within(dialog).getByRole('combobox', { name: /charged move 1/i }),
     ).toBeInTheDocument()
     expect(
-      within(panel()).queryByText(/matches the recommendation/i),
+      within(dialog).queryByRole('combobox', { name: /charged move 2/i }),
     ).not.toBeInTheDocument()
-    expect(
-      within(panel()).queryByText(/differs from the recommendation/i),
-    ).not.toBeInTheDocument()
-  })
 
-  test('renders recorded vs recommended and flags a match', async () => {
-    renderPanel(venusaur(RECOMMENDED))
-    // The recommendation (Vine Whip + Frenzy Plant) is shown alongside the recorded set.
+    await userEvent.click(within(dialog).getByRole('radio', { name: '2' }))
     expect(
-      await within(panel()).findByText(/recommended moveset/i),
-    ).toBeInTheDocument()
-    expect(
-      within(panel()).getByText(/matches the recommendation/i),
+      within(dialog).getByRole('combobox', { name: /charged move 2/i }),
     ).toBeInTheDocument()
   })
 
-  test('flags a mismatch when the recorded set differs from the recommendation', async () => {
-    renderPanel(
-      venusaur({
-        fast: move('RAZOR_LEAF_FAST', 'Razor Leaf', 'Grass', true),
-        charged1: move('SLUDGE_BOMB', 'Sludge Bomb', 'Poison', false),
-        charged2: null,
-      }),
-    )
-    expect(
-      await within(panel()).findByText(/differs from the recommendation/i),
-    ).toBeInTheDocument()
+  test('the selects are required, so no "(optional)" label appears', async () => {
+    renderPanel(venusaur(NONE))
+    const dialog = await openEditor()
+    expect(within(dialog).queryByText(/optional/i)).not.toBeInTheDocument()
   })
 
-  test('a match counts the recommended charged move in either charged slot', async () => {
-    // Recommended charged (Frenzy Plant) recorded in the SECOND slot still matches.
-    renderPanel(
-      venusaur({
-        fast: move('VINE_WHIP_FAST', 'Vine Whip', 'Grass', true),
-        charged1: move('SLUDGE_BOMB', 'Sludge Bomb', 'Poison', false),
-        charged2: move('FRENZY_PLANT', 'Frenzy Plant', 'Grass', false, true),
-      }),
-    )
-    expect(
-      await within(panel()).findByText(/matches the recommendation/i),
-    ).toBeInTheDocument()
-  })
-
-  test('saving PATCHes the selected move ids and reports the updated Pokémon', async () => {
+  test('saving two charged moves PATCHes all three ids, reports the update, and closes', async () => {
     let body: PokemonPatch | undefined
     server.use(
       http.patch('/api/pokemon/:id', async ({ request }) => {
@@ -183,30 +197,40 @@ describe('MovesPanel', () => {
       }),
     )
     const onSaved = renderPanel(venusaur(NONE))
+    const dialog = await openEditor()
 
-    // Pick Vine Whip (fast) and Frenzy Plant (charged 1).
-    await openCombobox(/^fast move/i)
+    await openCombobox(dialog, /^fast move/i)
     await userEvent.click(
       await screen.findByRole('option', { name: /vine whip/i }),
     )
-    await openCombobox(/^charged move/i)
+    await openCombobox(dialog, /^charged move 1/i)
     await userEvent.click(
       await screen.findByRole('option', { name: /frenzy plant/i }),
     )
+    await userEvent.click(within(dialog).getByRole('radio', { name: '2' }))
+    await openCombobox(dialog, /^charged move 2/i)
+    await userEvent.click(
+      await screen.findByRole('option', { name: /power whip/i }),
+    )
 
     await userEvent.click(
-      within(panel()).getByRole('button', { name: /save moves/i }),
+      within(dialog).getByRole('button', { name: /save moves/i }),
     )
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1))
-    expect(body).toMatchObject({
+    expect(body).toEqual({
       fastMoveId: 'VINE_WHIP_FAST',
       chargedMove1Id: 'FRENZY_PLANT',
+      chargedMove2Id: 'POWER_WHIP',
     })
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    )
   })
+})
 
-  test('surfaces a load error instead of silently-empty selects when the pool fetch fails', async () => {
-    // A missing moves endpoint / unsynced catalog must be visible, not look like "no moves exist".
+describe('MovesPanel — pool load failure', () => {
+  test('surfaces an error and offers no editor when the pool fetch fails', async () => {
     server.use(
       http.get('/api/species/:id/moves', () =>
         HttpResponse.json(
@@ -220,20 +244,12 @@ describe('MovesPanel', () => {
     )
     renderPanel(venusaur(NONE))
     expect(
-      await within(panel()).findByText(
+      await within(region('Moves')).findByText(
         /couldn.t load this species. move pool/i,
       ),
     ).toBeInTheDocument()
     expect(
-      within(panel()).queryByRole('combobox', { name: /^fast move/i }),
+      screen.queryByRole('button', { name: /edit moves/i }),
     ).not.toBeInTheDocument()
-  })
-
-  test('the second charged slot is optional — it renders and is not required', async () => {
-    renderPanel(venusaur(NONE))
-    const second = await within(panel()).findByRole('combobox', {
-      name: /second charged move/i,
-    })
-    expect(second).not.toBeRequired()
   })
 })
