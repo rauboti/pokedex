@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { HStack, Heading, Stack, Text } from '@chakra-ui/react'
-import { Badge, Button, Callout, Card, Combobox } from '@rauboti/ui'
+import { Heading, Stack, Table, Text } from '@chakra-ui/react'
+import {
+  Button,
+  Callout,
+  Card,
+  Combobox,
+  Dialog,
+  Grid,
+  PencilIcon,
+  SegmentedControl,
+} from '@rauboti/ui'
 import {
   getSpeciesMoves,
   updatePokemon,
@@ -8,15 +17,15 @@ import {
   type Pokemon,
   type SpeciesMoves,
 } from '@/api/schemas'
+import { TypeBadge } from '@/components/pokemon/TypeBadge'
 
 /**
- * The detail-view moves panel. Loads the species' move pool (`GET /api/species/{id}/moves`) and
- * lets the player record a fast + up to two charged moves, chosen only from that pool
- * (legacy/Elite-TM entries are marked "not currently obtainable"). It shows the recorded set
- * against the sync-computed recommendation with an honest match/mismatch verdict — and, when
- * nothing is recorded, an explicit unrecorded state rather than a guess. Saving PATCHes the move
- * ids and hands the updated Pokémon back to the page (which re-derives the recorded-move-type
- * coverage in the matchup panel).
+ * The detail-view moves panel Shows the sync-computed recommended moveset and the player's actual
+ * recorded moves side by side (two type/move tables), with an honest match/mismatch verdict and
+ * an explicit unrecorded state when nothing is recorded. The pencil opens a modal that edits the
+ * set from the species pool (legacy/Elite-TM entries marked "not currently obtainable"); saving
+ * PATCHes the move ids and hands the updated Pokémon back to the page (which re-derives the
+ * recorded-move-type coverage in the matchup panel).
  */
 
 const LEGACY_NOTE = 'not currently obtainable'
@@ -27,13 +36,185 @@ const moveItem = (m: Move) => ({
   label: m.legacy ? `${m.name} — ${LEGACY_NOTE}` : m.name,
 })
 
-/** A recorded move rendered as a badge, keeping the legacy marker visible. */
-const RecordedMove = ({ move }: { move: Move }) => (
-  <Badge type={move.legacy ? 'warning' : 'neutral'}>
-    {move.name}
-    {move.legacy ? ` · ${LEGACY_NOTE}` : ''}
-  </Badge>
+/** One row of a move summary table. */
+interface MoveRow {
+  key: string
+  type: string
+  name: string
+  legacy?: boolean | null
+}
+
+const moveRow = (key: string, move: Move): MoveRow => ({
+  key,
+  type: move.type,
+  name: move.name,
+  legacy: move.legacy,
+})
+
+/** A titled Type/Move table (the shared shape for the Recommended and Actual halves); shows an
+ *  explicit empty message rather than a bare table when there is nothing to list. */
+const MoveTable = ({
+  heading,
+  rows,
+  emptyText,
+}: {
+  heading: string
+  rows: MoveRow[]
+  emptyText: string
+}) => (
+  <Stack as="section" aria-label={heading} gap="2">
+    <Heading size="sm">{heading}</Heading>
+    {rows.length === 0 ? (
+      <Text color="text.muted" fontSize="sm">
+        {emptyText}
+      </Text>
+    ) : (
+      <Table.ScrollArea borderWidth="1px" borderColor="border" rounded="md">
+        <Table.Root
+          size="sm"
+          variant="line"
+          css={{ '& tr': { background: 'transparent' } }}
+        >
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>Type</Table.ColumnHeader>
+              <Table.ColumnHeader>Move</Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {rows.map((r) => (
+              <Table.Row key={r.key}>
+                <Table.Cell>
+                  <TypeBadge type={r.type} />
+                </Table.Cell>
+                <Table.Cell>
+                  {r.name}
+                  {r.legacy ? ` · ${LEGACY_NOTE}` : ''}
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table.Root>
+      </Table.ScrollArea>
+    )}
+  </Stack>
 )
+
+/** The edit modal: fast move, a 1-or-2 charged-slot count, then the charged move(s). All selects are
+ *  required (so no "(optional)" label) and offer only the species pool. */
+const MovesEditDialog = ({
+  pokemon,
+  pool,
+  onSaved,
+}: {
+  pokemon: Pokemon
+  pool: SpeciesMoves
+  onSaved?: (updated: Pokemon) => void
+}) => {
+  const [open, setOpen] = useState(false)
+  const [fast, setFast] = useState<string | null>(null)
+  const [charged1, setCharged1] = useState<string | null>(null)
+  const [charged2, setCharged2] = useState<string | null>(null)
+  const [chargedCount, setChargedCount] = useState('1')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(false)
+
+  // Seed the draft from the current record each time the modal opens.
+  const reset = () => {
+    setFast(pokemon.moves.fast?.id ?? null)
+    setCharged1(pokemon.moves.charged1?.id ?? null)
+    setCharged2(pokemon.moves.charged2?.id ?? null)
+    setChargedCount(pokemon.moves.charged2 ? '2' : '1')
+    setError(false)
+  }
+
+  const fastItems = pool.fastMoves.map(moveItem)
+  const chargedItems = pool.chargedMoves.map(moveItem)
+  const canSave = !!fast && !!charged1 && (chargedCount === '1' || !!charged2)
+
+  const save = async () => {
+    setSaving(true)
+    setError(false)
+    try {
+      const updated = await updatePokemon(pokemon.id, {
+        fastMoveId: fast,
+        chargedMove1Id: charged1,
+        chargedMove2Id: chargedCount === '2' ? charged2 : null,
+      })
+      onSaved?.(updated)
+      setOpen(false)
+    } catch {
+      setError(true)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) reset()
+        setOpen(next)
+      }}
+      trigger={
+        <Button variant="ghost" aria-label="Edit moves" alignSelf="flex-end">
+          <PencilIcon />
+        </Button>
+      }
+      title="Set moves"
+      footer={
+        <Button onClick={save} loading={saving} disabled={!canSave}>
+          Save moves
+        </Button>
+      }
+    >
+      <Stack gap="4">
+        {error && (
+          <Callout status="error">
+            We couldn&rsquo;t save these moves. Please try again.
+          </Callout>
+        )}
+        <Combobox
+          label="Fast move"
+          required
+          placeholder="Pick a fast move"
+          items={fastItems}
+          value={fast ? [fast] : []}
+          onValueChange={(values) => setFast(values[0] ?? null)}
+        />
+        <SegmentedControl
+          label="Number of charged attacks"
+          required
+          items={[
+            { value: '1', label: '1' },
+            { value: '2', label: '2' },
+          ]}
+          value={chargedCount}
+          onValueChange={setChargedCount}
+        />
+        <Combobox
+          label="Charged move 1"
+          required
+          placeholder="Pick a charged move"
+          items={chargedItems}
+          value={charged1 ? [charged1] : []}
+          onValueChange={(values) => setCharged1(values[0] ?? null)}
+        />
+        {chargedCount === '2' && (
+          <Combobox
+            label="Charged move 2"
+            required
+            placeholder="Pick a second charged move"
+            items={chargedItems}
+            value={charged2 ? [charged2] : []}
+            onValueChange={(values) => setCharged2(values[0] ?? null)}
+          />
+        )}
+      </Stack>
+    </Dialog>
+  )
+}
 
 export const MovesPanel = ({
   pokemon,
@@ -43,17 +224,7 @@ export const MovesPanel = ({
   onSaved?: (updated: Pokemon) => void
 }) => {
   const [pool, setPool] = useState<SpeciesMoves | null>(null)
-  const [fast, setFast] = useState<string | null>(
-    pokemon.moves.fast?.id ?? null,
-  )
-  const [charged1, setCharged1] = useState<string | null>(
-    pokemon.moves.charged1?.id ?? null,
-  )
-  const [charged2, setCharged2] = useState<string | null>(
-    pokemon.moves.charged2?.id ?? null,
-  )
   const [poolError, setPoolError] = useState(false)
-  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -63,7 +234,7 @@ export const MovesPanel = ({
         if (active) setPool(p)
       })
       .catch(() => {
-        // Surface the failure rather than leaving the selects mysteriously empty — an empty pool
+        // Surface the failure rather than leaving the panel mysteriously empty — an empty pool
         // usually means the catalog hasn't been synced (or the api lacks the moves endpoint).
         if (active) setPoolError(true)
       })
@@ -73,119 +244,82 @@ export const MovesPanel = ({
     }
   }, [pokemon.species.id])
 
-  const fastItems = useMemo(() => (pool?.fastMoves ?? []).map(moveItem), [pool])
-  const chargedItems = useMemo(
-    () => (pool?.chargedMoves ?? []).map(moveItem),
-    [pool],
-  )
-  // The optional second slot carries an explicit "None" to clear a previously-recorded move.
-  const secondChargedItems = useMemo(
-    () => [{ value: '', label: 'None' }, ...chargedItems],
-    [chargedItems],
-  )
-
-  const nameOf = (id: string): string => {
+  const byId = useMemo(() => {
     const all = [...(pool?.fastMoves ?? []), ...(pool?.chargedMoves ?? [])]
-    return all.find((m) => m.id === id)?.name ?? id
-  }
+    return new Map(all.map((m) => [m.id, m]))
+  }, [pool])
 
-  // The verdict compares the *saved* recorded set (not the in-progress draft) against the
-  // recommendation: matching = same fast move + the recommended charged move in either charged slot.
+  const recommendedRows: MoveRow[] = useMemo(() => {
+    const rec = pool?.recommended
+    if (!rec) return []
+    return [
+      ['fast', rec.fastMoveId] as const,
+      ['charged', rec.chargedMoveId] as const,
+    ].map(([slot, id]) => {
+      const m = byId.get(id)
+      return m
+        ? moveRow(`rec-${slot}`, m)
+        : { key: `rec-${slot}`, type: '', name: id }
+    })
+  }, [pool, byId])
+
   const recorded = pokemon.moves
-  const anyRecorded = !!(
-    recorded.fast ||
-    recorded.charged1 ||
-    recorded.charged2
-  )
+  const actualRows: MoveRow[] = [
+    recorded.fast ? moveRow('act-fast', recorded.fast) : null,
+    recorded.charged1 ? moveRow('act-charged1', recorded.charged1) : null,
+    recorded.charged2 ? moveRow('act-charged2', recorded.charged2) : null,
+  ].filter((r): r is MoveRow => r !== null)
+
+  const anyRecorded = actualRows.length > 0
   const rec = pool?.recommended ?? null
   const matchesRecommendation =
     !!rec &&
     recorded.fast?.id === rec.fastMoveId &&
     [recorded.charged1?.id, recorded.charged2?.id].includes(rec.chargedMoveId)
 
-  const save = async () => {
-    setSaving(true)
-    try {
-      const updated = await updatePokemon(pokemon.id, {
-        fastMoveId: fast,
-        chargedMove1Id: charged1,
-        chargedMove2Id: charged2,
-      })
-      onSaved?.(updated)
-    } finally {
-      setSaving(false)
-    }
-  }
-
   return (
     <Card>
       <Stack as="section" aria-label="Moves" gap="4">
         <Heading size="md">Moves</Heading>
 
-        {anyRecorded ? (
-          <Stack gap="2">
-            <HStack gap="2" wrap="wrap">
-              {recorded.fast && <RecordedMove move={recorded.fast} />}
-              {recorded.charged1 && <RecordedMove move={recorded.charged1} />}
-              {recorded.charged2 && <RecordedMove move={recorded.charged2} />}
-            </HStack>
-            {rec && (
-              <Text
-                fontSize="sm"
-                fontWeight="medium"
-                color={matchesRecommendation ? 'fg.success' : 'text.muted'}
-              >
-                {matchesRecommendation
-                  ? 'Matches the recommendation'
-                  : 'Differs from the recommendation'}
-              </Text>
-            )}
-          </Stack>
-        ) : (
-          <Text color="text.muted">No moves recorded yet</Text>
-        )}
-
-        {rec && (
-          <Text fontSize="sm" color="text.muted">
-            Recommended moveset: {nameOf(rec.fastMoveId)} +{' '}
-            {nameOf(rec.chargedMoveId)}
+        {anyRecorded && rec && (
+          <Text
+            fontSize="sm"
+            fontWeight="medium"
+            color={matchesRecommendation ? 'fg.success' : 'text.muted'}
+          >
+            {matchesRecommendation
+              ? 'Matches the recommendation'
+              : 'Differs from the recommendation'}
           </Text>
         )}
 
+        <Grid columns={{ base: 1, md: 2 }} gap="4">
+          <MoveTable
+            heading="Recommended"
+            rows={recommendedRows}
+            emptyText={
+              poolError
+                ? 'Couldn’t load the recommendation.'
+                : 'No recommendation yet.'
+            }
+          />
+          <MoveTable
+            heading="Actual"
+            rows={actualRows}
+            emptyText="No moves recorded yet"
+          />
+        </Grid>
+
         {poolError ? (
           <Callout status="error">
-            We couldn&rsquo;t load this species&rsquo; move pool. The catalog
-            may not be synced yet — try again after a catalog sync.
+            We couldn&rsquo;t load this species&rsquo; move pool, so moves
+            can&rsquo;t be edited. The catalog may not be synced yet.
           </Callout>
         ) : (
-          <>
-            <Combobox
-              label="Fast move"
-              placeholder="Pick a fast move"
-              items={fastItems}
-              value={fast ? [fast] : []}
-              onValueChange={(values) => setFast(values[0] ?? null)}
-            />
-            <Combobox
-              label="Charged move"
-              placeholder="Pick a charged move"
-              items={chargedItems}
-              value={charged1 ? [charged1] : []}
-              onValueChange={(values) => setCharged1(values[0] ?? null)}
-            />
-            <Combobox
-              label="Second charged move"
-              helperText="Optional"
-              placeholder="Pick a second charged move"
-              items={secondChargedItems}
-              value={charged2 ? [charged2] : []}
-              onValueChange={(values) => setCharged2(values[0] || null)}
-            />
-
-            <Button onClick={save} loading={saving} alignSelf="flex-start">
-              Save moves
-            </Button>
-          </>
+          pool && (
+            <MovesEditDialog pokemon={pokemon} pool={pool} onSaved={onSaved} />
+          )
         )}
       </Stack>
     </Card>
