@@ -82,6 +82,14 @@ class SyncServiceTest : IntegrationTest() {
             .list()
             .filterNotNull()
 
+    private fun recommendedOf(speciesId: String): Pair<String?, String?> =
+        jdbc
+            .sql(
+                "select recommended_fast_move_id, recommended_charged_move_id from species where id = :id",
+            ).param("id", speciesId)
+            .query { rs, _ -> rs.getString(1) to rs.getString(2) }
+            .single()
+
     @Test
     fun `a full sync upserts species, moves and pools with a synced_at timestamp`() {
         every { gamedataClient.fetchPokedex() } returns fixture
@@ -157,6 +165,41 @@ class SyncServiceTest : IntegrationTest() {
         syncService.sync()
 
         assertThat(poolMoveIds("CHARMANDER")).containsExactly("EMBER_FAST")
+    }
+
+    @Test
+    fun `sync ranks each species pool and stores the recommended moveset, clearing it when unrankable`() {
+        every { gamedataClient.fetchPokedex() } returns fixture
+        syncService.sync()
+
+        // Venusaur (Grass/Poison): cycle-DPS over its fixture pool picks the legacy Frenzy Plant,
+        // charged by Vine Whip (research D8; verified against MovesetRankerTest's metric).
+        assertThat(recommendedOf("VENUSAUR")).isEqualTo("VINE_WHIP_FAST" to "FRENZY_PLANT")
+
+        // A resync where Venusaur has a fast move but no charged move must clear the recommendation.
+        val noChargedMoves =
+            """
+            [
+              {
+                "id": "VENUSAUR", "dexNr": 3, "names": { "English": "Venusaur" },
+                "stats": { "stamina": 190, "attack": 198, "defense": 189 },
+                "primaryType": { "type": "POKEMON_TYPE_GRASS" },
+                "secondaryType": { "type": "POKEMON_TYPE_POISON" },
+                "quickMoves": {
+                  "VINE_WHIP_FAST": {
+                    "id": "VINE_WHIP_FAST", "power": 7, "energy": 6, "durationMs": 600,
+                    "type": { "type": "POKEMON_TYPE_GRASS" }, "names": { "English": "Vine Whip" }
+                  }
+                },
+                "cinematicMoves": {}, "eliteQuickMoves": [], "eliteCinematicMoves": {},
+                "regionForms": [], "megaEvolutions": {}
+              }
+            ]
+            """.trimIndent()
+        every { gamedataClient.fetchPokedex() } returns noChargedMoves
+        syncService.sync()
+
+        assertThat(recommendedOf("VENUSAUR")).isEqualTo(null to null)
     }
 
     @Test
