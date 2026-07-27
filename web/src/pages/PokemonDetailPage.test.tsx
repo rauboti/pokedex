@@ -115,6 +115,42 @@ describe('PokemonDetailPage', () => {
     const proj = screen.getByRole('region', { name: 'Projections' })
     expect(within(proj).getByText('L40')).toBeInTheDocument()
     expect(within(proj).getByText('L50')).toBeInTheDocument()
+    // Type matchups panel is wired in from the species' types (US4).
+    expect(
+      screen.getByRole('region', { name: 'Type matchups' }),
+    ).toBeInTheDocument()
+    // Moves panel is wired in (US5).
+    expect(
+      await screen.findByRole('region', { name: 'Moves' }),
+    ).toBeInTheDocument()
+  })
+
+  test('a recorded off-type move surfaces a move-coverage section in the matchup panel', async () => {
+    server.use(
+      http.get('/api/pokemon/:id', () =>
+        HttpResponse.json(
+          venusaur({
+            moves: {
+              fast: null,
+              charged1: {
+                id: 'EARTHQUAKE',
+                name: 'Earthquake',
+                type: 'Ground',
+                fast: false,
+              },
+              charged2: null,
+            },
+          }),
+        ),
+      ),
+    )
+
+    renderAt('/pokemon/venu')
+
+    // Venusaur is Grass/Poison; a recorded Ground move adds coverage the STAB types don't provide.
+    expect(
+      await screen.findByRole('region', { name: 'Move coverage' }),
+    ).toBeInTheDocument()
   })
 
   test('renders the Best Buddy projection row for a Best-Buddy Pokémon', async () => {

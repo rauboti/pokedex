@@ -17,6 +17,18 @@ import { PokemonSprite } from '@/components/pokemon/PokemonSprite'
 import { TypeBadge } from '@/components/pokemon/TypeBadge'
 import { StatsPanel } from '@/components/detail/StatsPanel'
 import { ProjectionsPanel } from '@/components/detail/ProjectionsPanel'
+import { MatchupPanel } from '@/components/detail/MatchupPanel'
+import { MovesPanel } from '@/components/detail/MovesPanel'
+
+/** The distinct types of a Pokémon's recorded moves — feeds the matchup panel's recorded-move
+ *  coverage section. Empty when nothing is recorded. */
+const recordedMoveTypes = (moves: Pokemon['moves']): string[] => [
+  ...new Set(
+    [moves.fast?.type, moves.charged1?.type, moves.charged2?.type].filter(
+      (t): t is string => !!t,
+    ),
+  ),
+]
 
 /**
  * The Pokémon detail page (`/pokemon/:id`, US3). Refetches the Pokémon by id — the collection row
@@ -125,6 +137,14 @@ export const PokemonDetailPage = () => {
 
       <StatsPanel pokemon={pokemon} />
       <ProjectionsPanel projections={pokemon.derived.projections} />
+      <MatchupPanel
+        types={species.types}
+        moveTypes={recordedMoveTypes(pokemon.moves)}
+      />
+      <MovesPanel
+        pokemon={pokemon}
+        onSaved={(updated) => setState({ status: 'ready', pokemon: updated })}
+      />
 
       <BackLink />
     </Stack>
