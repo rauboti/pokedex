@@ -72,6 +72,19 @@ describe('MatchupPanel — Charizard (Fire/Flying)', () => {
       screen.queryByRole('region', { name: /move coverage/i }),
     ).not.toBeInTheDocument()
   })
+
+  test('a recorded off-STAB move adds a distinct move-coverage section (US5 scenario 5)', () => {
+    // Charizard with a recorded Ground move: Ground coverage (Electric/Poison/Rock/Fire/Steel) is
+    // NOT part of its Fire/Flying STAB coverage, so it renders as its own section.
+    renderPanel(['Fire', 'Flying'], ['Ground'])
+    const moveCoverage = region('Move coverage')
+    const strong = region('Strong against')
+    // Electric is a Ground-only super-effective target — unique to the move-coverage section.
+    expect(within(moveCoverage).getByAltText('Electric')).toBeInTheDocument()
+    expect(within(strong).queryByAltText('Electric')).not.toBeInTheDocument()
+    // The STAB section is still present and distinct.
+    expect(within(strong).getByAltText('Ice')).toBeInTheDocument()
+  })
 })
 
 describe('MatchupPanel — pure Normal', () => {
