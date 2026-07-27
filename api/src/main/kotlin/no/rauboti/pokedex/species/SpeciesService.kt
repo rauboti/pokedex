@@ -27,5 +27,15 @@ class SpeciesService(
 
     fun isRegistrable(id: String) = repository.isRegistrable(id)
 
+    /** The recommended-moveset ids stored on a species, or null if the species does not exist. */
+    fun findRecommendedMoveIds(id: String) = repository.findRecommendedMoveIds(id)
+
+    /** Store (or clear, with nulls) a species' sync-computed recommended moveset (D8). */
+    fun updateRecommendedMoves(
+        speciesId: String,
+        fastMoveId: String?,
+        chargedMoveId: String?,
+    ) = repository.updateRecommendedMoves(speciesId, fastMoveId, chargedMoveId)
+
     fun lastSyncedAt() = repository.lastSyncedAt()
 }
