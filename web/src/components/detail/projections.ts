@@ -1,8 +1,9 @@
 import type { Projection } from '@/api/schemas'
+import type { StatRow } from './StatTable'
 
 /**
- * Pure DTO→display mapping for the level projections (US3). The panel feeds these rows to the Grid
- * verbatim; kept in its own module so the panel file stays component-only (react-refresh).
+ * Pure DTO→display mapping for the level projections (US3). The panel feeds these rows to the shared
+ * [StatTable]; kept in its own module so the panel file stays component-only (react-refresh).
  */
 
 const LABELS: Record<Projection['label'], string> = {
@@ -11,17 +12,7 @@ const LABELS: Record<Projection['label'], string> = {
   BEST_BUDDY: 'Best Buddy',
 }
 
-export type ProjectionRow = {
-  target: string
-  level: number
-  cp: number
-  hp: number
-  attack: number
-  defense: number
-  stamina: number
-}
-
-export const projectionRows = (projections: Projection[]): ProjectionRow[] =>
+export const projectionRows = (projections: Projection[]): StatRow[] =>
   projections.map((p) => ({
     target: LABELS[p.label],
     level: p.level,

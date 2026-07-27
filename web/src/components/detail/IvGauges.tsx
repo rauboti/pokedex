@@ -1,4 +1,5 @@
-import { Box, SimpleGrid, Stack, Text } from '@chakra-ui/react'
+import { Box, Stack, Text } from '@chakra-ui/react'
+import { Grid } from '@rauboti/ui'
 import Highcharts from 'highcharts'
 import 'highcharts/highcharts-more'
 import 'highcharts/modules/solid-gauge'
@@ -86,9 +87,9 @@ export const IvGauges = ({
   ivDef: number
   ivSta: number
 }) => (
-  <SimpleGrid columns={3} gap="3">
+  <Grid columns={3} gap="3">
     <IvGauge label="Atk" value={ivAtk} />
     <IvGauge label="Def" value={ivDef} />
     <IvGauge label="Sta" value={ivSta} />
-  </SimpleGrid>
+  </Grid>
 )
