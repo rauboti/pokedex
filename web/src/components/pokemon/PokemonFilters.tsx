@@ -14,22 +14,12 @@ import type { SortCriteria, SortDirection, SortKey } from '@/lib/sortPokemon'
 import { POKEMON_TYPES, TYPE_ICONS } from './pokemonTypes'
 
 /**
- * The collection's search / filter / sort controls (US2, FR-006–FR-008 UI), grouped by function
- * behind three icon buttons that each open a `@rauboti/ui` `Popover` — so the toolbar costs almost no
- * space and the collection stays live behind each panel. A controlled component: it renders the
- * current filter + sort and emits the next value on every change; the page applies it with the pure
- * `lib/` functions (`filterPokemon`/`sortPokemon`, T021). {@link PokemonFilterSummary} renders the
- * active state as a one-line summary.
+ * Search / filter / sort controls, each behind a `Popover` so the toolbar costs almost no space. A
+ * controlled component — it emits the next value and the page applies it with the pure `lib/`
+ * functions. Types are OR, flags are AND (see `lib/filterPokemon`).
  *
- * - **Search** — a text field over the species name.
- * - **Filter** — one `multiple` `Combobox` grouping the 18 types (each with its icon) and the 5 flags
- *   under headings separated by a divider; a Pokémon matches any selected **type** (OR) and must carry
- *   every selected **flag** (AND). Empty = "All".
- * - **Sort** — a single `Combobox` whose options fold key and direction together (Name Asc/Desc, …),
- *   replacing a separate direction toggle.
- *
- * Every control is `required` so none shows the DS "(optional)" hint (all three always resolve to a
- * value — an empty filter is "All", sort always has a selection).
+ * Every control is marked `required` purely to suppress the DS "(optional)" hint: all three always
+ * resolve to a value, since an empty filter means "All" and sort always has a selection.
  */
 
 export interface PokemonFiltersValue {
@@ -49,8 +39,7 @@ const FLAG_LABEL: Record<string, string> = Object.fromEntries(
   FLAG_ITEMS.map((f) => [f.value, f.label]),
 )
 
-/** Filter options grouped as Types (each with its vendored type icon) and Flags. The icon is
- *  decorative (`alt=""`) — the label already names the option. */
+/** The icon is decorative (`alt=""`) — the label already names the option. */
 const FILTER_ITEMS = {
   Types: POKEMON_TYPES.map((type) => ({
     value: type,
@@ -60,7 +49,7 @@ const FILTER_ITEMS = {
   Flags: FLAG_ITEMS,
 }
 
-/** Sort options fold the key and direction into one value (`"<key>:<dir>"`). */
+/** Key and direction fold into one value (`"<key>:<dir>"`), so there's no separate toggle. */
 const SORT_ITEMS: { value: `${SortKey}:${SortDirection}`; label: string }[] = [
   { value: 'name:asc', label: 'Name Asc' },
   { value: 'name:desc', label: 'Name Desc' },
@@ -163,9 +152,8 @@ export const PokemonFilters = ({
 }
 
 /**
- * The active search / filter / sort, shown as the toolbar's second row. Each active search term and
- * filter is a **removable `Tag`** so it clears in one click (no reopening the popover), with a
- * "Clear all" shortcut; the sort trails as muted text (it always has a value, so it isn't clearable).
+ * The toolbar's second row. Each active term is a removable `Tag`, so it clears without reopening the
+ * popover; sort trails as muted text because it always has a value and so can't be cleared.
  */
 export const PokemonFilterSummary = ({
   value,

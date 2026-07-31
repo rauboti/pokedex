@@ -6,11 +6,8 @@ import { IvGauges } from '@/components/detail/IvGauges'
 import { StatTable } from '@/components/detail/StatTable'
 
 /**
- * The detail-view stats panel (US3). Shows the server-derived block straight from the DTO — no client
- * stat math (research D7): the current level/CP/HP/effective stats as a single-row [StatTable] (same
- * columns and presentation as the projections below it), the per-stat IV breakdown as gauges
- * ([IvGauges]), and the overall IV% as the star rating the list uses. The species types and catch
- * flags live in the page header, not here.
+ * The server-derived stats block: current stats as a single-row [StatTable], the per-stat IV gauges,
+ * and the overall IV% as the same star rating the list uses. Types and flags live in the page header.
  */
 export const StatsPanel = ({ pokemon }: { pokemon: Pokemon }) => {
   const { derived, ivAtk, ivDef, ivSta, cp } = pokemon

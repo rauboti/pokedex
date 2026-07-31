@@ -10,19 +10,15 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
 
-/** A hive token pair: the short-lived access token and the rotating refresh token. */
+/** The short-lived access token and the rotating refresh token. */
 data class HiveTokens(
     val accessToken: String,
     val refreshToken: String,
 )
 
 /**
- * Talks to hive's `POST {internal-url}/oauth2/token` (`client_secret_post`): [exchange] redeems
- * an authorization code (Authorization-Code + PKCE), [refresh] renews a session with the rotating
- * refresh token (from [no.rauboti.pokedex.config.SessionTokenAuthenticationFilter]). Both return
- * the new [HiveTokens]. Any transport failure or unusable response is surfaced as
- * [no.rauboti.pokedex.common.HiveUnavailableException] — the "hive unreachable" path; for a refresh
- * it also signals the session can no longer be renewed silently (fall back to login).
+ * hive's token endpoint (`client_secret_post`). Any transport failure or unusable response becomes a
+ * `HiveUnavailableException`; on a refresh that also means the session can't be renewed silently.
  */
 interface HiveTokenClient {
     fun exchange(
@@ -77,8 +73,7 @@ class RestClientHiveTokenClient(
                     .retrieve()
                     .body(Map::class.java)
             } catch (e: RestClientException) {
-                // Transport failure (ResourceAccessException) or non-2xx (RestClientResponseException,
-                // e.g. an invalid_grant on a dead refresh token) — hive is unusable for this call.
+                // Transport failure or non-2xx (e.g. invalid_grant on a dead refresh token).
                 throw HiveUnavailableException("hive-unavailable", "Hive token request failed", e)
             } ?: throw HiveUnavailableException("hive-unavailable", "Empty response from hive token endpoint")
 

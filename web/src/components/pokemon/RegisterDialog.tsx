@@ -14,28 +14,16 @@ import { SpeciesSearch } from './SpeciesSearch'
 import { LevelPicker } from './LevelPicker'
 
 /**
- * The register / edit flow (US1 create + US2 edit, FR-001–FR-005 + FR-010 web side): search a
- * species, enter IVs + the observed CP, preview the **server-derived** level/HP/stats/IV%,
- * disambiguate a CP collision, reject an impossible combination, set flags + catch date, and save.
- * The dialog does no stat math — the preview reads `POST /api/derivation` (research D7) and the
- * authoritative derived block comes back from `POST /api/pokemon` (create) or `PATCH /api/pokemon/{id}`
- * (edit). Save is blocked until the derivation confirms exactly one level (auto-selected when
- * unambiguous, chosen from the [LevelPicker] on a collision, impossible when the candidate list is
- * empty). No nickname field (spec assumption 2026-07-20).
+ * The register / edit flow (US1 + US2) — see the web README's "Registration and the collection view".
+ * Save is blocked until the derivation confirms exactly one level.
  *
- * `editing` switches to edit mode: the form is prefilled from that Pokémon and Save PATCHes it
- * (re-running the derivation on any IV/CP change — the collision picker reappears when applicable).
- * Purification is just an ordinary edit — change IVs/CP and set the purified flag in one save (spec
- * assumption). The caller remounts this per target (a fresh `key`) so the prefill runs from `useState`
- * initialisers — no state-syncing effect — and controls `open`/`onOpenChange` for the edit case.
- *
- * The derivation result is kept keyed to the exact inputs that produced it, and everything the UI
- * needs (candidates, the effective level, save-ability) is derived during render. So state is only
- * ever written from async callbacks / event handlers, never synchronously inside the effect, and a
- * result can never be shown against inputs it wasn't computed for.
+ * Two invariants worth keeping in view: the caller remounts this per target with a fresh `key`, so the
+ * prefill runs from `useState` initialisers and needs no state-syncing effect; and the derivation
+ * result is tagged with the inputs that produced it, so a result can never render against inputs it
+ * wasn't computed for.
  */
 
-/** The catchable flags, as Combobox options (value = the PokemonInput flag key). */
+/** Value = the `PokemonInput` flag key. */
 const FLAG_ITEMS = [
   { value: 'shiny', label: 'Shiny' },
   { value: 'shadow', label: 'Shadow' },
@@ -46,15 +34,13 @@ const FLAG_ITEMS = [
 
 const FLAG_KEYS = ['shiny', 'shadow', 'lucky', 'purified', 'bestBuddy'] as const
 
-/** The set flags of a Pokémon as Combobox values (the inverse of the submit-time mapping). */
 const activeFlagValues = (flags: Pokemon['flags']): string[] =>
   FLAG_KEYS.filter((key) => flags[key])
 
-/** The derivation result tagged with the input signature it was computed for, so a stale response
- *  is never rendered against changed inputs. */
+/** Tagged with the inputs it was computed for, so a stale response never renders. */
 type Derivation = { key: string; candidates: DerivationCandidate[] }
 
-/** Clamp an IV text field to the game's 0–15 range, tolerating an empty field mid-edit. */
+/** Tolerates an empty field mid-edit. */
 const clampIv = (raw: string): string => {
   if (raw.trim() === '') return ''
   const n = Math.trunc(Number(raw))
@@ -73,9 +59,8 @@ export const RegisterDialog = ({
   onUpdated,
 }: {
   trigger?: ReactNode
-  /** When set, the dialog edits this Pokémon (prefilled, Save PATCHes) instead of registering. */
+  /** When set, the dialog edits this Pokémon instead of registering a new one. */
   editing?: Pokemon | null
-  /** Controlled open state (used by the collection page to open the edit flow from a row). */
   open?: boolean
   onOpenChange?: (open: boolean) => void
   onCreated?: (pokemon: Pokemon) => void
@@ -91,8 +76,7 @@ export const RegisterDialog = ({
     onOpenChange?.(next)
   }
 
-  // Prefill from `editing` via initialisers — the caller remounts (fresh `key`) per target, so this
-  // runs once per edit and never needs a state-syncing effect.
+  // Initialisers, not an effect — the caller remounts per target (see the file header).
   const [species, setSpecies] = useState<Species | null>(
     editing?.species ?? null,
   )
@@ -129,9 +113,8 @@ export const RegisterDialog = ({
     setError(null)
   }
 
-  // Preview: whenever the derivation inputs are complete, ask the server for the candidate level(s).
-  // A liveness guard drops a stale response (the client `derive` has no abort seam) and the result is
-  // tagged with `inputKey` so render only trusts it while the inputs still match.
+  // A liveness guard drops a stale response (`derive` has no abort seam) and `inputKey` means render
+  // only trusts the result while the inputs still match.
   useEffect(() => {
     const cpValue = Number(cpText)
     if (
@@ -163,7 +146,6 @@ export const RegisterDialog = ({
     }
   }, [species, ivAtk, ivDef, ivSta, cpText, inputKey])
 
-  // Everything below is derived from the (input-matched) derivation — no effect-synced state.
   const candidates = derivation?.key === inputKey ? derivation.candidates : null
   const selectedLevel =
     candidates == null

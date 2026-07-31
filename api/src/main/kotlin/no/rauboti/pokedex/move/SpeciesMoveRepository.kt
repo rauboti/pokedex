@@ -26,10 +26,7 @@ class SpeciesMoveRepository(
         }
     }
 
-    /**
-     * A species' full move pool as display [MoveDto]s with the pool's `legacy` marker set, ordered
-     * fast-moves-then-charged and alphabetically within each (stable output for the moves endpoint).
-     */
+    /** Ordered fast-then-charged, alphabetical within each — stable output for the moves endpoint. */
     fun findPoolMoves(speciesId: String): List<MoveDto> =
         jdbc
             .sql(

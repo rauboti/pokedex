@@ -20,23 +20,19 @@ import {
 import { TypeBadge } from '@/components/pokemon/TypeBadge'
 
 /**
- * The detail-view moves panel Shows the sync-computed recommended moveset and the player's actual
- * recorded moves side by side (two type/move tables), with an honest match/mismatch verdict and
- * an explicit unrecorded state when nothing is recorded. The pencil opens a modal that edits the
- * set from the species pool (legacy/Elite-TM entries marked "not currently obtainable"); saving
- * PATCHes the move ids and hands the updated Pokémon back to the page (which re-derives the
- * recorded-move-type coverage in the matchup panel).
+ * Recommended vs actually-recorded moves side by side, with a match/mismatch verdict and an explicit
+ * unrecorded state — never a guess (US5). Saving hands the updated Pokémon back to the page, which
+ * re-derives the recorded-move coverage in the matchup panel.
  */
 
 const LEGACY_NOTE = 'not currently obtainable'
 
-/** A pool move as a Combobox option; legacy moves carry the "not currently obtainable" marker. */
+/** Legacy moves carry the "not currently obtainable" marker. */
 const moveItem = (m: Move) => ({
   value: m.id,
   label: m.legacy ? `${m.name} — ${LEGACY_NOTE}` : m.name,
 })
 
-/** One row of a move summary table. */
 interface MoveRow {
   key: string
   type: string
@@ -51,8 +47,7 @@ const moveRow = (key: string, move: Move): MoveRow => ({
   legacy: move.legacy,
 })
 
-/** A titled Type/Move table (the shared shape for the Recommended and Actual halves); shows an
- *  explicit empty message rather than a bare table when there is nothing to list. */
+/** Shared by both halves. Shows an explicit empty message rather than a bare table. */
 const MoveTable = ({
   heading,
   rows,
@@ -100,8 +95,7 @@ const MoveTable = ({
   </Stack>
 )
 
-/** The edit modal: fast move, a 1-or-2 charged-slot count, then the charged move(s). All selects are
- *  required (so no "(optional)" label) and offer only the species pool. */
+/** Offers only the species pool. Selects are `required` to suppress the DS "(optional)" label. */
 const MovesEditDialog = ({
   pokemon,
   pool,
@@ -234,8 +228,7 @@ export const MovesPanel = ({
         if (active) setPool(p)
       })
       .catch(() => {
-        // Surface the failure rather than leaving the panel mysteriously empty — an empty pool
-        // usually means the catalog hasn't been synced (or the api lacks the moves endpoint).
+        // Surface it — an empty pool usually means the catalog hasn't been synced.
         if (active) setPoolError(true)
       })
     return () => {

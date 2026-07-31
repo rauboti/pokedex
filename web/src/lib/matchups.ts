@@ -9,13 +9,8 @@ import {
 } from './typeChart'
 
 /**
- * Pure type-matchup helpers for the detail view. Both functions work off `Species.types` and the
- * vendored {@link TYPE_CHART} alone — no server round-trip, no stat math.
- *
- * `defensiveMatchups` stacks the per-type cells for a 1–2 type defender (a dual type multiplies its
- * two cells, so effectiveness can reach 2.56 or 0.390625). `offensiveCoverage` reports which
- * defenders the species hits super-effectively, split into STAB (the species' own types) and any
- * recorded move types (US5 scenario 5 groundwork, kept distinct from STAB).
+ * Pure type-matchup helpers, computed from `Species.types` and the vendored {@link TYPE_CHART} alone.
+ * A dual type multiplies its two cells, so effectiveness can reach 2.56 or 0.390625.
  */
 
 /**
@@ -30,9 +25,7 @@ import {
 export type MatchupLabel =
   'double-weak' | 'weak' | 'resist' | 'double-resist' | 'immune-in-effect'
 
-/** One attacking type's combined effectiveness against a defender's full type set. */
 export interface Matchup {
-  /** The attacking type. */
   type: string
   /** Exact stacked GO multiplier (product of the per-defender-type cells). */
   multiplier: number
@@ -40,7 +33,6 @@ export interface Matchup {
   label: MatchupLabel
 }
 
-/** A defender's weaknesses and resistances, each sorted strongest-first. */
 export interface DefensiveMatchups {
   /** Multiplier > 1, ordered by descending multiplier (double weaknesses first). */
   weaknesses: Matchup[]
@@ -69,7 +61,7 @@ const labelFor = (multiplier: number, cells: number[]): MatchupLabel => {
   return multiplier <= IMMUNE ? 'double-resist' : 'resist'
 }
 
-/** Canonicalise a 1–2 type list, dropping unknowns and duplicates (order preserved). */
+/** Drops unknowns and duplicates, preserving order. */
 const cleanTypes = (types: string[]): string[] => {
   const out: string[] = []
   for (const t of types) {
@@ -79,11 +71,7 @@ const cleanTypes = (types: string[]): string[] => {
   return out
 }
 
-/**
- * Defensive weaknesses and resistances for a species with the given `types` (1–2 canonical type
- * names, any casing/order). Neutral matchups are omitted. An empty/all-unknown input yields empty
- * groups.
- */
+/** Neutral matchups are omitted; an empty or all-unknown input yields empty groups. */
 export const defensiveMatchups = (types: string[]): DefensiveMatchups => {
   const defTypes = cleanTypes(types)
   const weaknesses: Matchup[] = []
@@ -131,10 +119,8 @@ const coverageOf = (type: string): TypeCoverage => ({
 })
 
 /**
- * Super-effective coverage for a species. `stab` covers each of the species' own `types`; `moves`
- * covers each recorded `moveTypes` entry that isn't already a species type (so it reads as genuinely
- * *additional* coverage, kept distinct from STAB). Unknown/duplicate types are dropped; casing is
- * ignored.
+ * `moves` deliberately excludes types already covered by `stab`, so it reads as genuinely *additional*
+ * coverage rather than repeating STAB.
  */
 export const offensiveCoverage = (
   types: string[],

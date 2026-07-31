@@ -1,23 +1,12 @@
 /**
- * Vendored Pokémon GO type-effectiveness chart (research D6.3, constitution Game Data Constraints:
- * stable reference tables are vendored, never fetched). This is the *only* game constant that lives
- * on the web tier — the matchup view is computed entirely client-side from `Species.types` plus
- * this table, so the api ships no type-effectiveness endpoint.
+ * Vendored Pokémon GO type-effectiveness chart — the only game constant on the web tier (constitution
+ * Game Data Constraints; see the web README's "Vendored type chart").
  *
- * Source of truth: the Gen VI+ type relations as used by Pokémon GO, mapped onto GO's four
- * multipliers. Cross-checked against GamePress ("Type Effectiveness",
- * https://gamepress.gg/pokemongo/type-effectiveness) and Bulbapedia's damage-type chart.
+ * Source: Gen VI+ type relations as used by GO, cross-checked against GamePress
+ * (https://gamepress.gg/pokemongo/type-effectiveness) and Bulbapedia's damage-type chart.
  *
- * GO has no true 0× immunity: a main-series immunity becomes "double not very effective"
- * (0.625² = 0.390625) — heavy resistance, "immune in effect". The four multipliers are therefore:
- *   super effective        1.6
- *   neutral                1
- *   not very effective     0.625
- *   immune (in effect)     0.390625
- *
- * The chart is authored as readable per-attacker relation lists and expanded into the full 18×18
- * numeric matrix at module load — auditable by eye, and impossible to leave a cell half-filled.
- * `matchups.ts` stacks these cells for dual-type defenders.
+ * GO has no true 0× immunity — a main-series immunity becomes 0.625² = 0.390625, "immune in effect".
+ * Authored as per-attacker relation lists and expanded at module load, so no cell can be half-filled.
  */
 
 export const SUPER_EFFECTIVE = 1.6
@@ -25,7 +14,7 @@ export const NEUTRAL = 1
 export const NOT_VERY_EFFECTIVE = 0.625
 export const IMMUNE = 0.390625
 
-/** The 18 canonical type names (matches `components/pokemon/pokemonTypes.ts` and the api's names). */
+/** Must stay in step with `components/pokemon/pokemonTypes.ts` and the api's type names. */
 export const POKEMON_TYPES = [
   'Normal',
   'Fire',
@@ -49,12 +38,7 @@ export const POKEMON_TYPES = [
 
 export type PokemonType = (typeof POKEMON_TYPES)[number]
 
-/**
- * Per-attacking-type relations (the vendored source data). `se` / `nve` / `immune` list the
- * defending types an attack of that type is super-effective / not-very-effective / immune against;
- * every unlisted defender is neutral. Attackers with no super-effective targets (Normal) simply
- * carry an empty `se`.
- */
+/** The vendored source data: unlisted defenders are neutral, so Normal carries an empty `se`. */
 const RELATIONS: Record<
   PokemonType,
   { se: PokemonType[]; nve: PokemonType[]; immune: PokemonType[] }
@@ -139,7 +123,6 @@ const RELATIONS: Record<
   },
 }
 
-/** Full 18×18 numeric matrix: `TYPE_CHART[attack][defend]` is one of the four GO multipliers. */
 export const TYPE_CHART: Record<
   string,
   Record<string, number>
@@ -164,14 +147,12 @@ const CANONICAL = new Map(
   POKEMON_TYPES.map((t) => [t.toLowerCase(), t as string]),
 )
 
-/** Canonical casing for a type name, or `undefined` if it is not one of the 18 types. */
 export const canonicalType = (type: string): string | undefined =>
   CANONICAL.get(type.trim().toLowerCase())
 
 /**
- * Effectiveness multiplier of an `attack` type against a single `defend` type. Case-insensitive;
- * an unknown type on either side is treated as {@link NEUTRAL} (the lib never throws on catalog
- * data it doesn't recognise — matchup display degrades gracefully).
+ * Case-insensitive. An unrecognised type on either side is {@link NEUTRAL} rather than an error, so
+ * matchup display degrades gracefully on catalog data this table doesn't know.
  */
 export const effectiveness = (attack: string, defend: string): number => {
   const a = canonicalType(attack)

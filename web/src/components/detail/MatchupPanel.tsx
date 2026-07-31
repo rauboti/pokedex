@@ -9,17 +9,12 @@ import {
 import { TypeBadge } from '@/components/pokemon/TypeBadge'
 
 /**
- * The detail-view type matchups (US4, FR-015 — SC-006's UI half). Computed entirely client-side from
- * the species' types + the vendored chart (research D6.3): defensive weaknesses/resistances via
- * [defensiveMatchups] (dual-type stacking, so a matchup can be double) and offensive "strong against"
- * coverage via [offensiveCoverage]. Each defensive matchup shows its stacked multiplier, which is
- * what visually distinguishes a double weakness (2.56×) from a single one (1.6×). `moveTypes` is the
- * US5 groundwork: when recorded move types are supplied, their extra coverage renders as its own
- * section, kept distinct from the innate STAB coverage.
+ * Type matchups, computed entirely client-side from the species' types plus the vendored chart. The
+ * stacked multiplier on each chip is what distinguishes a double weakness (2.56×) from a single one
+ * (1.6×). Recorded `moveTypes` render as their own section, kept distinct from innate STAB coverage.
  */
 
-/** Multiplier → badge severity: weaknesses warm (worse = more severe), resistances cool (stronger
- *  = more positive). */
+/** Weaknesses run warm, resistances cool. */
 const TIER_BADGE: Record<MatchupLabel, BadgeType> = {
   'double-weak': 'danger',
   weak: 'warning',
@@ -40,8 +35,7 @@ const MatchupChip = ({ matchup }: { matchup: Matchup }) => (
   </HStack>
 )
 
-/** A titled row of matchup chips, with an explicit empty state so "no resistances" never reads as
- *  a rendering bug. */
+/** The explicit empty state matters: "no resistances" must not read as a rendering bug. */
 const MatchupGroup = ({
   label,
   matchups,
@@ -67,8 +61,7 @@ const MatchupGroup = ({
   </Stack>
 )
 
-/** A titled row of plain type badges (offensive coverage — super-effective is binary, no multiplier),
- *  with the same explicit empty state. */
+/** Offensive coverage is binary, so no multiplier is shown. */
 const CoverageGroup = ({
   label,
   types,
@@ -94,7 +87,6 @@ const CoverageGroup = ({
   </Stack>
 )
 
-/** Union of the super-effective targets across a set of coverage entries, sorted alphabetically. */
 const coverageTargets = (entries: { superEffective: string[] }[]): string[] =>
   [...new Set(entries.flatMap((e) => e.superEffective))].sort()
 

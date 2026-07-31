@@ -1,14 +1,10 @@
-# Test profile: integration tests get their datasource from a throwaway
-# Testcontainers Postgres wired via @ServiceConnection (the harness lands in T008,
-# with the security full-context tests), so no datasource/URL is set here. Flyway
-# applies the schema migrations against that container; no demo seed — tests insert
-# only the rows they need.
+# Test profile: integration tests get their datasource from a throwaway Testcontainers Postgres
+# via @ServiceConnection, so none is set here. Flyway applies the schema; tests insert their own rows.
 spring:
   flyway:
     enabled: true
 
-# Never run the empty-catalog startup sync in tests — the game-data source is stubbed
-# at the client interface (MockK) per test, and the suite must not reach the network (T010).
 pokedex:
   gamedata:
+    # The suite must never reach the network — the game-data client is stubbed per test.
     sync-on-startup: false

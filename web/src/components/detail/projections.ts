@@ -1,10 +1,7 @@
 import type { Projection } from '@/api/schemas'
 import type { StatRow } from './StatTable'
 
-/**
- * Pure DTO→display mapping for the level projections (US3). The panel feeds these rows to the shared
- * [StatTable]; kept in its own module so the panel file stays component-only (react-refresh).
- */
+/** Pure DTO→row mapping, split out so the panel file stays component-only (react-refresh). */
 
 const LABELS: Record<Projection['label'], string> = {
   L40: 'L40',

@@ -5,9 +5,8 @@ import java.security.SecureRandom
 import java.util.Base64
 
 /**
- * PKCE (RFC 7636) + CSRF-`state` primitives for the login flow (research D1). pokedex is the OAuth
- * *client*, so it generates the `code_verifier` (kept server-side) and sends only the S256
- * `code_challenge` to hive.
+ * PKCE (RFC 7636) + CSRF-`state` primitives. pokedex is the OAuth *client*: the `code_verifier` stays
+ * server-side and only the S256 `code_challenge` goes to hive.
  */
 object Pkce {
     private val secureRandom = SecureRandom()

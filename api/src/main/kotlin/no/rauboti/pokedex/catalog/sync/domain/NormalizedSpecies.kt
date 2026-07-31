@@ -1,7 +1,6 @@
 package no.rauboti.pokedex.catalog.sync.domain
 
-/** One species+form row (data-model `species`). Megas/temporary battle forms are `registrable=false`.
- *  `imageUrl`/`shinyImageUrl` come from the feed's `assets` and are null when absent. */
+/** One species+form row. Megas and temporary battle forms are `registrable=false`. */
 data class NormalizedSpecies(
     val id: String,
     val dexNr: Int,

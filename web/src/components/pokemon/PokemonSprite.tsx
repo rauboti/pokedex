@@ -4,10 +4,8 @@ import type { ImageProps } from '@chakra-ui/react'
 import type { Pokemon } from '@/api/schemas'
 
 /**
- * The species sprite for a collection card (synced URL from the catalog, research D5). Uses the shiny
- * artwork when the caught Pokémon is shiny and a shiny URL exists, else the normal image. Renders
- * nothing when the species has no synced image (many forms/megas) or the image fails to load — the
- * card's name text still identifies it, so the sprite is purely additive.
+ * Prefers the shiny artwork when the Pokémon is shiny and a shiny URL exists. Renders nothing when
+ * there is no synced image or it fails to load — the card's name already identifies it.
  */
 export const PokemonSprite = ({
   pokemon,

@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
  *
  * The external token exchange is the one collaborator we mock ([HiveTokenClient]); everything else
  * is exercised through the real controller via standalone MockMvc, so the redirects/status/problem+json
- * are the actual HTTP behaviour. Mirrors avec's `LoginFlowTest` (minus its locale machinery).
+ * are the actual HTTP behaviour.
  */
 class LoginFlowTest {
     private val hiveTokenClient = mockk<HiveTokenClient>()

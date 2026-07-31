@@ -5,11 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * Move pool + recommended moveset for a species (`GET /api/species/{id}/moves`, US5). An unknown
- * species is a 404 (thrown in [SpeciesMovesService]); authentication is enforced by the security
- * config like every other `/api` route.
- */
+/** `GET /api/species/{id}/moves` — move pool plus recommended moveset. Unknown species → 404. */
 @RestController
 class SpeciesMovesController(
     private val speciesMovesService: SpeciesMovesService,

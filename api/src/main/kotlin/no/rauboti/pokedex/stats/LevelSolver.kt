@@ -1,11 +1,9 @@
 package no.rauboti.pokedex.stats
 
 /**
- * The CP→level solver: given a species' base stats, a Pokémon's IVs, and its observed CP, return
- * **all** half-step levels (1.0–51.0) whose computed CP equals the observed value. Almost always
- * exactly one — CP is strictly non-decreasing in level for fixed IVs, so multiple matches only
- * occur on the CP=10 clamp plateau at the lowest levels (a genuine collision the caller
- * disambiguates). An empty list means the (species, IVs, CP) combination is impossible.
+ * Returns **every** half-step level whose computed CP equals the observed one — almost always exactly
+ * one, since CP is non-decreasing in level; multiple matches occur only on the CP=10 clamp plateau,
+ * a genuine collision the caller disambiguates. Empty means the combination is impossible.
  */
 object LevelSolver {
     fun solve(

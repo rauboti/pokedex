@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Species search endpoint (`GET /api/species?q=`). `q` is a required, non-blank name substring;
- * `limit` defaults to 20 and is capped at the contract maximum of 50. A missing `q` is a framework
- * 400 (rendered as problem+json); a blank `q` is rejected here.
+ * `GET /api/species?q=` — name-substring search, `limit` capped at the contract maximum. A missing `q`
+ * is a framework 400; a blank one is rejected here.
  */
 @RestController
 class SpeciesController(

@@ -2,10 +2,7 @@ package no.rauboti.pokedex.caughtpokemon.domain
 
 import java.time.LocalDate
 
-/**
- * The fields a caller supplies to register a Pokémon; the id and created/updated timestamps are
- * assigned by the database (data-model defaults). Flags default off and moves unrecorded.
- */
+/** The fields a caller supplies to register a Pokémon; id and timestamps are database-assigned. */
 data class CaughtBasePokemon(
     val userId: String,
     val speciesId: String,

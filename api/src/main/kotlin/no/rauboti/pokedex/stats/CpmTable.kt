@@ -3,15 +3,13 @@ package no.rauboti.pokedex.stats
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * The vendored CP-multiplier table: levels 1.0–51.0 in half-steps, loaded once from the classpath
- * resource `reference/cpm.json`. Pure Kotlin — no Spring — so the stats module is unit-testable
- * in isolation. Levels are keyed by their doubled integer (half-steps → whole numbers) to avoid
- * floating-point map-key pitfalls.
+ * The vendored CP-multiplier table (levels 1.0–51.0 in half-steps), loaded once from the classpath.
+ * Keyed by doubled integer so half-steps never become floating-point map keys.
  */
 object CpmTable {
     private val byHalfStep: Map<Int, Double>
 
-    /** All table levels, ascending (1.0, 1.5, … 51.0). */
+    /** Ascending: 1.0, 1.5, … 51.0. */
     val levels: List<Double>
 
     init {
@@ -28,7 +26,7 @@ object CpmTable {
         levels = map.keys.map { it / 2.0 }
     }
 
-    /** The CP multiplier at [level]. Throws if [level] is not a known half-step in 1.0–51.0. */
+    /** Throws if [level] is not a known half-step. */
     fun cpm(level: Double): Double =
         byHalfStep[key(level)]
             ?: throw IllegalArgumentException("No CP multiplier for level $level")

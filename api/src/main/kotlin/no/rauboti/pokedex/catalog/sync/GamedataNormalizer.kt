@@ -10,15 +10,12 @@ import tools.jackson.databind.JsonNode
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * Normalizes the pokemon-go-api.github.io Pokédex feed into catalog rows. Pure — no Spring context
- * needed to run it, no DB — so it is unit-tested directly against committed fixture JSON.
+ * Normalizes the pokemon-go-api Pokédex feed into catalog rows — pure, unit-tested against committed
+ * fixture JSON. Feed shape and the per-field skip rules are described in the api README ("Catalog sync").
  *
- * The feed is a JSON array of species objects; move data is embedded per species under four
- * collections (`quickMoves`/`cinematicMoves` and their `elite*` legacy counterparts). The walk is
- * deliberately defensive: a species or move missing a required field is **skipped, not fatal**
- * (the source occasionally carries placeholder/partial entries); a root that is not a JSON array or
- * is unparseable is a whole-feed failure → [GamedataUnavailableException] (→ 502). Empty elite
- * collections serialize as `[]` (not `{}`); any non-object collection is treated as empty.
+ * Deliberately defensive: a species or move missing a required field is skipped rather than fatal,
+ * because the source carries occasional placeholder entries. Only an unparseable or non-array root
+ * fails the whole feed.
  */
 @Component
 class GamedataNormalizer {
@@ -55,12 +52,7 @@ class GamedataNormalizer {
         return NormalizedCatalog(species, moves.values.toList(), pool)
     }
 
-    /**
-     * Parse one species/form/mega node into a species row (+ its embedded move pool). Skips the node
-     * entirely on any missing required field; skips an individual malformed move without dropping the
-     * species. [dexNr] and [baseId] come from the owning top-level entry (forms/megas inherit the dex
-     * number and derive their form label from the id suffix).
-     */
+    /** [dexNr] and [baseId] come from the owning top-level entry — forms and megas inherit both. */
     private fun parseEntry(
         node: JsonNode,
         dexNr: Int,
@@ -126,7 +118,7 @@ class GamedataNormalizer {
         }
     }
 
-    /** `POKEMON_TYPE_GRASS` → `Grass` — language-independent (no reliance on the `names` map). */
+    /** `POKEMON_TYPE_GRASS` → `Grass` — language-independent, unlike the feed's `names` map. */
     private fun canonicalType(raw: String): String =
         raw
             .removePrefix("POKEMON_TYPE_")
@@ -141,10 +133,7 @@ class GamedataNormalizer {
             ?.split("_")
             ?.joinToString(" ") { it.lowercase().replaceFirstChar { c -> c.uppercase() } }
 
-    /**
-     * The human-readable form label from the id suffix relative to the base: `RATTATA_ALOLA` vs base
-     * `RATTATA` → `Alola`; `VENUSAUR_MEGA` → `Mega`. The base form (id == baseId) has no label (null).
-     */
+    /** `RATTATA_ALOLA` over base `RATTATA` → `Alola`. The base form itself has no label. */
     private fun formLabel(
         id: String,
         baseId: String,

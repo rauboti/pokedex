@@ -17,25 +17,20 @@ import {
 } from './fixtures'
 
 /**
- * Default mock request handlers, shared by the test server (`server.ts`) and the dev worker
- * (`browser.ts`). Defaults represent a signed-in player with pokedex access so the app renders
- * without a real hive; individual tests override per-case with `server.use(...)` (e.g. a 401 for
- * the unauthenticated path, a 403 for the no-access path, or a specific derivation/pokemon shape).
+ * Default handlers shared by the test server and the dev worker. Defaults are a signed-in player with
+ * access, so the app renders without a real hive; tests override per-case with `server.use(...)`.
  *
- * The pokemon CRUD handlers back the dev worker with an in-memory store so register/edit/delete
- * behave end-to-end in mock mode. Tests never rely on this state — page tests supply their own
- * per-case handlers — so cross-test contamination isn't a concern (`server.resetHandlers()`
- * restores this default list after each test).
+ * The CRUD handlers keep an in-memory store so register/edit/delete work end-to-end in mock mode.
+ * Tests never lean on that state, and `resetHandlers()` restores this list after each one.
  */
 
-/** A `problem+json` response with the stable machine `code`. */
 const problem = (status: number, title: string, code: string) =>
   HttpResponse.json(
     { title, status, code },
     { status, headers: { 'Content-Type': 'application/problem+json' } },
   )
 
-/** Resolve a move id to a full Move from the seeded pools, else a minimal stub (mock only). */
+/** Falls back to a minimal stub — mock only. */
 const findMove = (id: string, fast: boolean): Move => {
   for (const pool of Object.values(speciesMovesById)) {
     const hit = [...pool.fastMoves, ...pool.chargedMoves].find(
@@ -46,7 +41,7 @@ const findMove = (id: string, fast: boolean): Move => {
   return { id, name: id, type: 'Normal', fast }
 }
 
-/** A hand-authored derived block for a mock create/edit (the api computes the real one, D7). */
+/** Hand-authored — the api computes the real one. */
 const derivedFor = (input: PokemonInput | Required<PokemonPatch>): Derived => {
   const ivPercent =
     Math.round(((input.ivAtk + input.ivDef + input.ivSta) / 45) * 1000) / 10
@@ -96,7 +91,7 @@ const derivedFor = (input: PokemonInput | Required<PokemonPatch>): Derived => {
 }
 
 const makePokemonHandlers = (): RequestHandler[] => {
-  // A mutable copy so dev-mode writes persist across a session without touching the fixtures.
+  // Mutable copy, so dev-mode writes persist without touching the fixtures.
   let store: Pokemon[] = [...pokemon]
   let nextId = 1
 

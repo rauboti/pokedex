@@ -6,15 +6,11 @@ import no.rauboti.pokedex.stats.LevelSolver
 import org.springframework.stereotype.Component
 
 /**
- * The post-sync staleness rescan (closes the [SyncService] no-op seam). After a successful catalog sync,
- * re-derives every caught Pokémon against the *refreshed* base stats: if its stored `level` no longer
- * appears among the solver's candidates for (base stats, IVs, CP), a rebalance has moved the math out
- * from under it and the row is flagged `stale` so the player re-checks it.
+ * Re-derives every caught Pokémon against the refreshed base stats after a sync and flags the ones a
+ * rebalance has moved out from under (FR-013).
  *
- * Flagging is **monotonic** — the rescan only ever *sets* `stale=true`; the flag is cleared solely by a
- * re-deriving edit ([no.rauboti.pokedex.pokemon.PokemonService] write invariant 3), so a player's
- * correction is never silently undone by a later sync. Species rows are never deleted by a sync, so a
- * caught row's species is expected to resolve; a defensive miss leaves the row untouched.
+ * Flagging is **monotonic**: this only ever sets `stale`, never clears it — clearing is a re-deriving
+ * edit's job — so a player's correction is never silently undone by a later sync.
  */
 @Component
 class StalenessRescan(
@@ -22,7 +18,7 @@ class StalenessRescan(
     private val speciesService: SpeciesService,
 ) {
     fun rescan() {
-        val rows = caughtPokemonService.findAll().filterNot { it.stale } // already-flagged rows need no recheck
+        val rows = caughtPokemonService.findAll().filterNot { it.stale }
         if (rows.isEmpty()) return
         val speciesById = speciesService.findByIds(rows.map { it.speciesId }.toSet()).associateBy { it.id }
 

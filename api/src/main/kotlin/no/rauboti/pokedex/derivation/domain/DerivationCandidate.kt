@@ -1,10 +1,8 @@
 package no.rauboti.pokedex.derivation.domain
 
 /**
- * One CP→level candidate (contract `DerivationResult.candidates[]`). `dustCost` is the power-up
- * stardust at this level — an informational hint shown per candidate. Collisions occur only within
- * the low-level CP-floor plateau, where the dust cost is equal across candidates; the player
- * distinguishes candidates by level.
+ * One CP→level candidate. `dustCost` is a per-candidate hint, *not* the disambiguator: collisions only
+ * happen on the low-level CP-floor plateau, where dust is equal across candidates.
  */
 data class DerivationCandidate(
     val level: Double,

@@ -22,24 +22,13 @@ import { PokemonSprite } from './PokemonSprite'
 import { TypeBadge } from './TypeBadge'
 
 /**
- * The collection grid (US1/US2, FR-010). A responsive @rauboti/ui `Grid` of `Card`s — up to four
- * columns at the widest, reflowing to fewer as the viewport narrows; `autoFill` keeps empty tracks so
- * a lone card holds its column width instead of stretching. Each card is a vertical stack: **name +
- * types**, the centred **sprite** (larger on wide screens), the **CP** on its own, **HP · Level**, a
- * fixed-height **attributes** row ([PokemonAttributes] — Shiny/Shadow/Lucky/Best Buddy glyphs), then
- * **the IV star rating + the edit/delete actions** — all server-derived values read straight from the
- * DTO (the web app does no stat math, research D7). IV quality shows as a Pokémon GO-style star rating
- * ([IvStars] — yellow stars by band, one pink star for a perfect catch, US3) rather than a raw number.
- * A rebalanced (`stale`) row wears a "re-check" badge (FR-013) and its edit action reads "Re-enter".
- * The whole card links to that Pokémon's detail page (`/pokemon/:id`, US3/T025) via a stretched link:
- * the name is the real (keyboard-focusable, screen-reader) anchor, and its `::after` overlays the card
- * so a click anywhere navigates — while the edit/delete actions are raised above the overlay
- * (`zIndex`) so they keep working. The `interactive` Card variant gives the whole card its hover/cursor
- * affordance (DS tokens). Kept as a `ul`/`li` list for semantics.
+ * The responsive collection grid of cards — layout and card anatomy are described in the web README
+ * ("Registration and the collection view").
  *
- * When the list is empty it renders one of two empty states: `filtered` distinguishes "your filters
- * match nothing" from "you have registered nothing yet". `onEdit`/`onDelete` add per-card actions; a
- * stale row's edit is surfaced as a prominent "Re-enter" so the FR-013 re-check has an obvious path.
+ * The card uses a **stretched link**: the name is the real focusable anchor and its `::after` overlays
+ * the card, so a click anywhere navigates. The edit/delete actions must therefore stay raised above
+ * that overlay (`zIndex`) or they stop working. `autoFill` keeps empty tracks so a lone card holds its
+ * column width instead of stretching.
  */
 
 const displayName = (species: Pokemon['species']) =>
@@ -52,11 +41,11 @@ export const PokemonList = ({
   onDelete,
 }: {
   pokemon: Pokemon[]
-  /** True when a filter is active, so an empty result reads as "no matches" not "nothing yet". */
+  /** Picks between the "no matches" and "nothing yet" empty states. */
   filtered?: boolean
-  /** Open the edit flow for a row (also the stale "re-enter" path). Omitted → no edit action. */
+  /** Also the stale "re-enter" path. Omitted → no edit action. */
   onEdit?: (pokemon: Pokemon) => void
-  /** Delete a row (the page confirms first). Omitted → no delete action. */
+  /** The page confirms first. Omitted → no delete action. */
   onDelete?: (pokemon: Pokemon) => void
 }) => {
   if (pokemon.length === 0) {
@@ -74,7 +63,6 @@ export const PokemonList = ({
       {pokemon.map((p) => (
         <Card as="li" key={p.id} interactive position="relative">
           <Stack gap="2">
-            {/* Row 1: name (left) + types (right) */}
             <HStack justify="space-between" wrap="wrap" gap="2">
               <HStack gap="2" wrap="wrap" minW="0">
                 <ChakraLink
@@ -96,12 +84,10 @@ export const PokemonList = ({
               </HStack>
             </HStack>
 
-            {/* Sprite, centred (larger on wide screens) */}
             <Center minH={{ base: '16', lg: '24' }}>
               <PokemonSprite pokemon={p} size={{ base: '16', lg: '24' }} />
             </Center>
 
-            {/* CP alone, centred */}
             <Text textAlign="center" fontWeight="medium">
               CP {p.cp}
             </Text>
@@ -111,10 +97,9 @@ export const PokemonList = ({
               <Text>Level {p.derived.level}</Text>
             </HStack>
 
-            {/* Attributes (Shiny/Shadow/Lucky/Best Buddy) — fixed height, so cards align */}
+            {/* Fixed height even when empty, so cards stay aligned */}
             <PokemonAttributes flags={p.flags} rarity={p.species.rarity} />
 
-            {/* IV star rating (left) + actions (right) */}
             <HStack justify="space-between" align="center">
               <IvStars
                 ivPercent={p.derived.ivPercent}

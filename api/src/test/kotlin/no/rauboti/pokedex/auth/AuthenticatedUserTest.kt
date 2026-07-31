@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.get
  * unauthenticated → 401 entry point). The field mapping is checked by calling the controller
  * directly with a built [Jwt] — the token is validated + placed by the filter in production, so
  * here we only assert the claims-to-[AuthenticatedUser] projection (contract `Me`: sub + name +
- * flat roles list). Mirrors avec's `AuthenticatedUserTest` (pokedex has no locale).
+ * flat roles list).
  */
 @AutoConfigureMockMvc
 class AuthenticatedUserTest : IntegrationTest() {

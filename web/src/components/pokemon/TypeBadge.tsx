@@ -2,10 +2,8 @@ import { Image, Text } from '@chakra-ui/react'
 import { TYPE_ICONS } from './pokemonTypes'
 
 /**
- * A Pokémon type badge: just the type's colored icon (colour baked into the SVG). The type name is
- * the image's accessible name (`alt`) — announced by screen readers — and its native `title`, so
- * sighted users get a hover label without a separate tooltip component. An unknown type (shouldn't
- * occur; the catalog carries only the 18) degrades to a text label.
+ * The type's colored icon. Its name is both `alt` and `title`, so screen readers announce it and
+ * sighted users get a hover label without a tooltip component. An unknown type degrades to text.
  */
 export const TypeBadge = ({ type }: { type: string }) => {
   const icon = TYPE_ICONS[type]

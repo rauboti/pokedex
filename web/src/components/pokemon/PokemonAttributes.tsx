@@ -12,19 +12,12 @@ import type { ReactNode } from 'react'
 import type { Pokemon } from '@/api/schemas'
 
 /**
- * A collection card's status row: small coloured glyphs for what a Pokémon *is* and what it *carries*
- * — the species rarity (Legendary, Mythic) first, then the catch attributes (Shiny, Shadow, Purified,
- * Lucky, Best Buddy) — each shown only when present. The row keeps a **fixed height** whether or not
- * any glyph is present, so every card is the same height regardless of attributes.
- *
- * Glyphs are `@rauboti/ui` icons (the DS's lucide-based set), coloured via the wrapper
- * (`currentColor`) — ui-first, no hand-rolled SVG here. Rarity comes from the synced `Species.rarity`
- * (Game Master `pokemonClass`, normalized api-side) — never hardcoded on the web (constitution). An
- * unmapped rarity (e.g. "Ultra Beast") simply shows no glyph.
+ * A card's status row: rarity glyph first, then the catch attributes, each only when present. Keeps a
+ * **fixed height** even when empty so all cards match. Rarity comes from the synced `Species.rarity`,
+ * never hardcoded here; an unmapped value simply shows no glyph.
  */
 
-/** Species rarity glyphs, keyed by the synced `Species.rarity` label. Rendered before catch
- *  attributes; a rarity not in this map (e.g. "Ultra Beast") shows nothing. */
+/** Keyed by the synced `Species.rarity` label; anything unmapped shows nothing. */
 const RARITIES: Record<
   string,
   { label: string; color: string; glyph: ReactNode }

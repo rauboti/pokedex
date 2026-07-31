@@ -3,15 +3,11 @@ package no.rauboti.pokedex.stats
 import kotlin.math.floor
 import kotlin.math.sqrt
 
-/**
- * The Pokémon GO stat formulas — pure functions over base stats, IVs, and a CP multiplier. The
- * single authoritative implementation; the web app does zero stat math. CP and HP both floor
- * and clamp to a minimum of 10 (the game's floors).
- */
+/** The Pokémon GO stat formulas — pure, and the single authoritative implementation. */
 object StatFormulas {
     private const val MIN = 10
 
-    /** Effective attack/defense/stamina at a CPM: `(base + iv) × cpm` (unfloored). */
+    /** `(base + iv) × cpm`, unfloored. */
     data class EffectiveStats(
         val attack: Double,
         val defense: Double,

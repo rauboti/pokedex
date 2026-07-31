@@ -13,11 +13,8 @@ import no.rauboti.pokedex.stats.StatFormulas
 import org.springframework.stereotype.Service
 
 /**
- * The stateless CP→level derivation: bridges the species catalog and the pure stats module.
- * Validates the input, resolves the species' base stats, runs the solver, and builds a candidate
- * (level + derived HP/effective stats + dust hint) for every matching level. Zero candidates means
- * the (species, IVs, CP) combination is impossible. The registrable check lives in the write path
- * — derivation is a read-only preview for any known species.
+ * The stateless CP→level derivation preview: one candidate per matching level, zero when the
+ * combination is impossible. No registrable check — that belongs to the write path.
  */
 @Service
 class DerivationService(
@@ -57,8 +54,7 @@ class DerivationService(
                         attack = effective.attack,
                         defense = effective.defense,
                         stamina = effective.stamina,
-                        // No power-up cost beyond the level cap; harmless 0 there (a hint only, and
-                        // high-level results are never collisions anyway).
+                        // 0 past the level cap — a display hint only, and those are never collisions.
                         dustCost = DustTable.dust(level) ?: 0,
                     )
                 }

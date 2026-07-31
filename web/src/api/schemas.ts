@@ -2,16 +2,11 @@ import { z } from 'zod'
 import { apiRequest, type ApiRequestOptions } from './client'
 
 /**
- * Typed client for the pokedex data API (contract `/api/species`, `/api/derivation`,
- * `/api/pokemon`, `/api/catalog`) plus the `/api/auth` shapes. Zod schemas validate every response
- * body; the functions wrap [apiRequest] with the right method/path so callers work in typed values,
- * never raw fetches. Shapes mirror the OpenAPI `Species` / `Move` / `SpeciesMoves` /
- * `DerivationResult` / `Derived` / `Pokemon` / `CatalogStatus` / `Me` schemas. All stat math is
- * server-side (research D7) — the `Derived` block is read, never computed here.
+ * Typed client for the pokedex API: one Zod schema and one function per contract operation. Every
+ * schema mirrors its OpenAPI counterpart, and the `Derived` block is read, never computed here.
  */
 
-/** A species+form from the synced catalog (`Species`). `types` is 1–2 canonical type names;
- *  `form` is null for the base form. */
+/** `types` is 1–2 canonical type names; `form` is null for the base form. */
 export const speciesSchema = z.object({
   id: z.string(),
   dexNr: z.number(),
@@ -28,10 +23,8 @@ export const speciesSchema = z.object({
 })
 export type Species = z.infer<typeof speciesSchema>
 
-/** A fast/charged move (`Move`). `legacy` marks a not-currently-obtainable pool entry. On a
- *  Pokémon's recorded moves the api sends it as `null` (Jackson includes the null field); on the
- *  move-pool listing it is a real boolean. `nullish` accepts both that `null` and an absent field so
- *  a recorded move never fails validation. */
+/** `legacy` is a real boolean on pool listings but `null` on recorded moves, hence `nullish` —
+ *  without it a recorded move would fail validation. */
 export const moveSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -41,8 +34,7 @@ export const moveSchema = z.object({
 })
 export type Move = z.infer<typeof moveSchema>
 
-/** A species' move pool + the sync-computed recommendation (`SpeciesMoves`). `recommended` is
- * null when the pool is unknown. */
+/** `recommended` is null when the pool yields no pairing. */
 export const speciesMovesSchema = z.object({
   speciesId: z.string(),
   fastMoves: z.array(moveSchema),
@@ -53,8 +45,8 @@ export const speciesMovesSchema = z.object({
 })
 export type SpeciesMoves = z.infer<typeof speciesMovesSchema>
 
-/** One CP→level candidate (`DerivationResult.candidates[]`); `dustCost` disambiguates a
- *  CP collision. */
+/** `dustCost` is a per-candidate hint, not the collision disambiguator — it is equal across
+ *  candidates on the CP-floor plateau, where collisions actually occur. */
 export const derivationCandidateSchema = z.object({
   level: z.number(),
   hp: z.number(),
@@ -65,13 +57,11 @@ export const derivationCandidateSchema = z.object({
 })
 export type DerivationCandidate = z.infer<typeof derivationCandidateSchema>
 
-/** `POST /api/derivation` result. An empty `candidates` array = impossible combination. */
 export const derivationResultSchema = z.object({
   candidates: z.array(derivationCandidateSchema),
 })
 export type DerivationResult = z.infer<typeof derivationResultSchema>
 
-/** `POST /api/derivation` request body (`DerivationRequest`). */
 export type DerivationRequest = {
   speciesId: string
   ivAtk: number
@@ -80,7 +70,7 @@ export type DerivationRequest = {
   cp: number
 }
 
-/** One projected level row (`Derived.projections[]`): L40/L50 always, Best Buddy when flagged. */
+/** L40/L50 always, Best Buddy only when flagged. */
 export const projectionSchema = z.object({
   label: z.enum(['L40', 'L50', 'BEST_BUDDY']),
   level: z.number(),
@@ -92,7 +82,7 @@ export const projectionSchema = z.object({
 })
 export type Projection = z.infer<typeof projectionSchema>
 
-/** The server-computed derived block (`Derived`) — the SPA does no stat math. */
+/** Server-computed — the SPA does no stat math. */
 export const derivedSchema = z.object({
   level: z.number(),
   hp: z.number(),
@@ -105,8 +95,7 @@ export const derivedSchema = z.object({
 })
 export type Derived = z.infer<typeof derivedSchema>
 
-/** A registered Pokémon (`Pokemon`) with its nested flags, recorded moves (nulls = unrecorded),
- *  and the server-computed `derived` block. `stale` is set by the post-sync rescan. */
+/** Null moves mean unrecorded; `stale` is set by the post-sync rescan. */
 export const pokemonSchema = z.object({
   id: z.string(),
   species: speciesSchema,
@@ -135,8 +124,7 @@ export type Pokemon = z.infer<typeof pokemonSchema>
 
 export const pokemonListSchema = z.array(pokemonSchema)
 
-/** `POST /api/pokemon` request body (`PokemonInput`). `level` is required only when the derivation
- *  is ambiguous and must then be one of the candidates; flags/moves/caughtAt are optional. */
+/** `level` is required only when the derivation is ambiguous, and must then be a candidate. */
 export type PokemonInput = {
   speciesId: string
   ivAtk: number
@@ -155,11 +143,9 @@ export type PokemonInput = {
   caughtAt?: string | null
 }
 
-/** `PATCH /api/pokemon/{id}` body (`PokemonPatch`) — any subset of the input fields. */
 export type PokemonPatch = Partial<PokemonInput>
 
-/** `GET /api/catalog` (`CatalogStatus`). `syncedAt` is null until the first successful sync;
- *  `stalePokemonCount` is the caller's own stale Pokémon. */
+/** `syncedAt` is null until the first sync; `stalePokemonCount` is the caller's own. */
 export const catalogStatusSchema = z.object({
   speciesCount: z.number(),
   moveCount: z.number(),
@@ -168,8 +154,7 @@ export const catalogStatusSchema = z.object({
 })
 export type CatalogStatus = z.infer<typeof catalogStatusSchema>
 
-/** `GET /api/auth/me` (`Me`) — the pokedex identity from hive claims. `roles` is the flat
- *  aud-scoped list; an empty list means signed in but no pokedex access (no-access screen). */
+/** An empty `roles` list means signed in but without pokedex access. */
 export const meSchema = z.object({
   sub: z.string(),
   name: z.string().nullable().optional(),
@@ -179,8 +164,7 @@ export type Me = z.infer<typeof meSchema>
 
 // --- Species ---------------------------------------------------------------
 
-/** `GET /api/species?q=` — case-insensitive name search over registrable species (mega/temporary
- *  forms excluded). `limit` caps results (server max 50). */
+/** Registrable species only — megas and temporary forms are excluded server-side. */
 export const searchSpecies = (
   q: string,
   limit?: number,
@@ -191,7 +175,6 @@ export const searchSpecies = (
   return apiRequest(`/species?${query}`, z.array(speciesSchema), { signal })
 }
 
-/** `GET /api/species/{id}/moves` — the pool (legacy markers) + recommended pairing. */
 export const getSpeciesMoves = (
   id: string,
   signal?: AbortSignal,
@@ -200,58 +183,49 @@ export const getSpeciesMoves = (
 
 // --- Derivation & Pokémon --------------------------------------------------
 
-/** `POST /api/derivation` — stateless CP→level preview; empty candidates = impossible. */
 export const derive = (input: DerivationRequest): Promise<DerivationResult> =>
   apiRequest('/derivation', derivationResultSchema, {
     method: 'POST',
     body: input,
   })
 
-/** `GET /api/pokemon` — the caller's full collection (filter/sort happens client-side). */
+/** The caller's whole collection — filter and sort happen client-side. */
 export const listPokemon = (signal?: AbortSignal): Promise<Pokemon[]> =>
   apiRequest('/pokemon', pokemonListSchema, { signal })
 
-/** `GET /api/pokemon/{id}` — a single Pokémon (the detail view refetches by id); 404 when unknown or
- *  not the caller's own. */
+/** 404 covers both unknown and not-the-caller's-own. */
 export const getPokemon = (
   id: string,
   signal?: AbortSignal,
 ): Promise<Pokemon> => apiRequest(`/pokemon/${id}`, pokemonSchema, { signal })
 
-/** `POST /api/pokemon` — register a Pokémon; resolves the created resource with its derived block. */
 export const createPokemon = (input: PokemonInput): Promise<Pokemon> =>
   apiRequest('/pokemon', pokemonSchema, { method: 'POST', body: input })
 
-/** `PATCH /api/pokemon/{id}` — partial edit (re-derives on species/IV/CP change); resolves the
- *  updated Pokémon. */
+/** Re-derives server-side on a species/IV/CP change. */
 export const updatePokemon = (
   id: string,
   patch: PokemonPatch,
 ): Promise<Pokemon> =>
   apiRequest(`/pokemon/${id}`, pokemonSchema, { method: 'PATCH', body: patch })
 
-/** `DELETE /api/pokemon/{id}` — permanently delete (204 No Content). */
 export const deletePokemon = (id: string): Promise<void> =>
   apiRequest(`/pokemon/${id}`, z.undefined(), { method: 'DELETE' })
 
 // --- Catalog ---------------------------------------------------------------
 
-/** `GET /api/catalog` — sync status for the catalog-freshness UI. */
 export const getCatalog = (signal?: AbortSignal): Promise<CatalogStatus> =>
   apiRequest('/catalog', catalogStatusSchema, { signal })
 
-/** `POST /api/catalog/sync` — trigger a game-data sync (admin-only); resolves the refreshed status.
- *  502 `gamedata-unavailable` when the source is down. */
+/** Admin-only; 502 `gamedata-unavailable` when the source is down. */
 export const triggerSync = (): Promise<CatalogStatus> =>
   apiRequest('/catalog/sync', catalogStatusSchema, { method: 'POST' })
 
 // --- Auth ------------------------------------------------------------------
 
-/** `GET /api/auth/me` — the session-bootstrap probe. The AuthProvider passes
- *  `redirectOnUnauthorized/notifyForbidden: false` to interpret 401/403 itself. */
+/** The session-bootstrap probe opts out of the global 401/403 handling to interpret it itself. */
 export const me = (options: ApiRequestOptions = {}): Promise<Me> =>
   apiRequest('/auth/me', meSchema, options)
 
-/** `POST /api/auth/logout` — end the session (204). */
 export const logout = (): Promise<void> =>
   apiRequest('/auth/logout', z.undefined(), { method: 'POST' })

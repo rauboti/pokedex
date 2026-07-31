@@ -3,12 +3,9 @@ import { Combobox } from '@rauboti/ui'
 import type { DerivationCandidate } from '@/api/schemas'
 
 /**
- * Level disambiguation for a CP collision (US1 scenario 4). When the derivation returns more than one
- * candidate level for the entered CP, the player picks the right one; each option carries its
- * per-candidate stardust cost as an informational hint (dust ties within the low-level CP-floor
- * plateau where collisions actually occur — see the T016 amendment — so it is a hint, not the
- * differentiator). A single-select Combobox: the plateau can span more than a handful of half-levels
- * for a weak species at low IVs.
+ * Level disambiguation when the derivation returns more than one candidate. Dust is shown as an
+ * informational hint, *not* the differentiator — it ties across the CP-floor plateau where collisions
+ * actually occur. A Combobox rather than radios: the plateau can span many half-levels.
  */
 
 const formatDust = (dust: number) => dust.toLocaleString('en-US')

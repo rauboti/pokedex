@@ -3,9 +3,8 @@ package no.rauboti.pokedex.caughtpokemon.domain
 import java.time.LocalDate
 
 /**
- * `POST /api/pokemon` request body (contract `PokemonInput`). `level` is required only when the
- * derivation is ambiguous and must then be one of the candidate levels (write invariant 1); flags
- * default off and moves are unrecorded unless supplied.
+ * `POST /api/pokemon` body (contract `PokemonInput`). `level` is required only when the derivation is
+ * ambiguous, and must then be one of the candidates.
  */
 data class CreateCaughtPokemon(
     val speciesId: String,

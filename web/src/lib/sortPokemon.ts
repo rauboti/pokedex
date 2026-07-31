@@ -1,11 +1,7 @@
 import type { Pokemon } from '@/api/schemas'
 
-/**
- * Pure client-side collection sorting (research D10) — the sibling of `./filterPokemon`. One column
- * at a time, stable, non-mutating.
- */
+/** Pure client-side collection sorting: one column at a time, stable, non-mutating. */
 
-/** Sortable columns for the collection. */
 export type SortKey = 'ivPercent' | 'cp' | 'level' | 'caughtAt' | 'name'
 export type SortDirection = 'asc' | 'desc'
 
@@ -14,17 +10,14 @@ export interface SortCriteria {
   direction: SortDirection
 }
 
-// ISO-8601 strings compare lexicographically in chronological order, so plain string comparison
-// works for both `caughtAt` timestamps and names.
+// ISO-8601 sorts chronologically under plain string comparison, so dates and names share a path.
 const compareStrings = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0
 
 /**
- * Sort a collection by one column, returning a new array (the input is never mutated). The sort is
- * stable — rows equal on the key keep their original order, enforced by an index tiebreak rather
- * than relying on the engine. `caughtAt` nulls always sort last, in both directions; `name` breaks
- * ties on form so a base form precedes its regional variants (nicknames are unsupported — spec
- * assumption).
+ * Stability is enforced by an explicit index tiebreak rather than trusting the engine. `caughtAt`
+ * nulls sort last in *both* directions, and `name` breaks ties on form so a base form leads its
+ * regional variants.
  */
 export const sortPokemon = (
   list: Pokemon[],

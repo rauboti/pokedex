@@ -20,8 +20,7 @@ import { ProjectionsPanel } from '@/components/detail/ProjectionsPanel'
 import { MatchupPanel } from '@/components/detail/MatchupPanel'
 import { MovesPanel } from '@/components/detail/MovesPanel'
 
-/** The distinct types of a Pokémon's recorded moves — feeds the matchup panel's recorded-move
- *  coverage section. Empty when nothing is recorded. */
+/** Feeds the matchup panel's recorded-move coverage. Empty when nothing is recorded. */
 const recordedMoveTypes = (moves: Pokemon['moves']): string[] => [
   ...new Set(
     [moves.fast?.type, moves.charged1?.type, moves.charged2?.type].filter(
@@ -31,10 +30,8 @@ const recordedMoveTypes = (moves: Pokemon['moves']): string[] => [
 ]
 
 /**
- * The Pokémon detail page (`/pokemon/:id`, US3). Refetches the Pokémon by id — the collection row
- * links here — and frames its server-derived stats ([StatsPanel]) and level projections
- * ([ProjectionsPanel]). A 404 (unknown or not the caller's own) resolves to a not-found state; other
- * failures show a generic Callout. Derived values are read straight from the DTO (no client math, D7).
+ * The detail page (`/pokemon/:id`), refetched by id. A 404 — unknown or not the caller's own — becomes
+ * a not-found state; anything else shows a generic Callout.
  */
 
 type State =

@@ -22,11 +22,9 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 
 /**
- * Unit tests for the BFF session-auth filter (T008): it authenticates a request from the
- * session-stored access token, silently refreshes an expired one server-side, and drops the session
- * (leaving the request unauthenticated) when even the refresh fails. Collaborators are MockK'd; the
- * authorities converter is the real one, so `roles` → `ROLE_*` is exercised too. Mirrors avec's
- * `SessionTokenAuthenticationFilterTest`.
+ * The BFF session-auth filter: authenticates from the session-stored access token, silently refreshes
+ * an expired one, and drops the session when even the refresh fails. Collaborators are MockK'd, but the
+ * authorities converter is real, so `roles` → `ROLE_*` is exercised too.
  */
 class SessionTokenAuthenticationFilterTest {
     private val jwtDecoder = mockk<JwtDecoder>()

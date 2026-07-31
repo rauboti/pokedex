@@ -1,19 +1,17 @@
 # syntax=docker/dockerfile:1
 
-# ---- Build stage: compile + package the Spring Boot fat jar ----
+# ---- Build stage ----
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /build
 
-# Wrapper + manifest first; sources after. Tests are SKIPPED here on purpose:
-# they use Testcontainers, which needs a Docker daemon not available inside
-# `docker build`. CI stays the test gate (`mvnw verify`).
-# The m2 cache mount speeds up repeat local builds.
+# -DskipTests is deliberate: the suite needs a Docker daemon (Testcontainers), which
+# `docker build` doesn't provide. `mvnw verify` stays the test gate.
 COPY .mvn ./.mvn
 COPY mvnw pom.xml ./
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2,sharing=locked sh ./mvnw -B clean package -DskipTests
 
-# ---- Runtime stage: slim JRE + the jar, non-root ----
+# ---- Runtime stage: slim JRE, non-root ----
 FROM eclipse-temurin:25-jre-alpine AS runtime
 WORKDIR /app
 RUN addgroup -S spring && adduser -S spring -G spring

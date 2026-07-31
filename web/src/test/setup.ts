@@ -3,9 +3,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { server } from '@/mocks/server'
 
-// Highcharts reaches for a couple of browser APIs jsdom doesn't implement — `CSS.supports` on
-// import and `SVGElement.getBBox` on render — so even importing a chart module throws without these.
-// (Chart wrappers are stubbed in tests; these keep the underlying libs loadable regardless.)
+// Highcharts needs `CSS.supports` on import and `SVGElement.getBBox` on render; jsdom has neither,
+// so even importing a chart module throws without these shims.
 const globalCss = globalThis as unknown as {
   CSS?: { supports?: (...args: string[]) => boolean }
 }
@@ -29,9 +28,8 @@ if (typeof svgProto.getBBox !== 'function') {
     }) as DOMRect
 }
 
-// jsdom ships neither of these, but Chakra (responsive props) and next-themes
-// (prefers-color-scheme) both reach for them on render. Re-applied each test and
-// defaulted to the light scheme for deterministic colour-mode tests.
+// Chakra (responsive props) and next-themes (prefers-color-scheme) need these; jsdom has neither.
+// Re-applied per test and defaulted to light for deterministic colour-mode assertions.
 beforeEach(() => {
   vi.stubGlobal(
     'matchMedia',

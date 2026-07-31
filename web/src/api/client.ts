@@ -1,16 +1,13 @@
 import { z } from 'zod'
 
-/** Backend endpoint that begins the hive OAuth flow (302 → hive authorize). A full-page
- *  navigation, not XHR — it can't be a client route. */
+/** A full-page navigation, not XHR — so it can never be a client route. */
 export const LOGIN_PATH = '/auth/login'
 
-/** All BFF endpoints live under this prefix; callers pass resource-relative paths
- *  (e.g. `/auth/me`, `/pokemon`). The dev proxy / nginx forwards `/api` to the api service. */
+/** Callers pass resource-relative paths (`/auth/me`, `/pokemon`). */
 const API_BASE = '/api'
 
-/** RFC-7807 problem details. `code` is the stable machine identifier the app keys on (e.g.
- *  `impossible-combination`, `unknown-species`, `gamedata-unavailable`). Every field is optional
- *  so an unexpected error body still parses. */
+/** RFC-7807 problem details. Every field is optional so an unexpected error body still parses;
+ *  `code` is the stable machine identifier the UI keys on. */
 export const problemSchema = z.object({
   type: z.string().optional(),
   title: z.string().optional(),
@@ -21,8 +18,7 @@ export const problemSchema = z.object({
 })
 export type Problem = z.infer<typeof problemSchema>
 
-/** Thrown for any non-2xx response. Carries the HTTP status and, when the body was
- *  `application/problem+json`, the parsed problem details (incl. the machine `code`). */
+/** Thrown for any non-2xx response, carrying the status and any parsed problem details. */
 export class ApiError extends Error {
   readonly status: number
   readonly problem?: Problem
@@ -41,10 +37,8 @@ export class ApiError extends Error {
 }
 
 /**
- * Registered by the AuthProvider: called whenever a request comes back 403 (authenticated but no
- * pokedex access), so the app can drop to the "no access to Pokedex" screen no matter which data
- * call surfaced it. `null` clears the handler. The session-bootstrap probe opts out via
- * `notifyForbidden: false` (it interprets its own 403).
+ * Registered by the AuthProvider so any 403 drops the app to the no-access screen, whichever data
+ * call surfaced it. `null` clears the handler.
  */
 let onForbidden: (() => void) | null = null
 export const setOnForbidden = (handler: (() => void) | null): void => {
@@ -56,11 +50,9 @@ export type ApiRequestOptions = {
   /** Serialized to JSON and sent with `Content-Type: application/json`. */
   body?: unknown
   signal?: AbortSignal
-  /** On 401, redirect the browser to hive login (default). Pass `false` for the
-   *  session-bootstrap probe so the app can render a login screen instead. */
+  /** Pass `false` for the bootstrap probe, so it can render a login screen instead. */
   redirectOnUnauthorized?: boolean
-  /** On 403, invoke the global no-access handler (default). Pass `false` for the
-   *  bootstrap probe, which resolves its own no-access state. */
+  /** Pass `false` for the bootstrap probe, which resolves its own no-access state. */
   notifyForbidden?: boolean
 }
 
@@ -76,12 +68,9 @@ const readProblem = async (
 }
 
 /**
- * Typed fetch wrapper for the pokedex BFF. Sends the session cookie, validates the response body
- * against `schema`, and normalizes failures:
- *   - 401 → redirect to `/auth/login` (unless opted out), then reject with `ApiError`.
- *   - 403 → notify the no-access handler (unless opted out), then reject with `ApiError`.
- *   - other non-2xx → reject with `ApiError` (parsing `problem+json` when present).
- *   - 2xx → parse the JSON body with `schema` (use `z.undefined()` for 204).
+ * Typed fetch wrapper: sends the session cookie, validates the body against `schema` (use
+ * `z.undefined()` for 204s), and turns every failure into an `ApiError`. See the web README
+ * ("Auth flow") for the 401/403 handling.
  */
 export const apiRequest = async <T>(
   path: string,

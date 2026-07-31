@@ -8,9 +8,8 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * A registered Pokémon as the API returns it (contract `Pokemon`). The `derived` block (level, HP,
- * effective stats, IV%, projections) is computed server-side on every read; the web app does no
- * stat math. `moves` carries the resolved recorded moves (null = unrecorded).
+ * A registered Pokémon as the API returns it (contract `Pokemon`). The `derived` block is computed
+ * server-side on every read.
  */
 data class PokemonDto(
     val id: UUID,

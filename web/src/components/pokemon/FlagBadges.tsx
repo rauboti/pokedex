@@ -2,11 +2,7 @@ import { HStack } from '@chakra-ui/react'
 import { Badge } from '@rauboti/ui'
 import type { Pokemon } from '@/api/schemas'
 
-/**
- * The set of active catch flags on a Pokémon, as small badges (US1/US2). Renders nothing when no
- * flag is set. Order is fixed (shiny → shadow → lucky → purified → Best Buddy) so a row's badges
- * read consistently.
- */
+/** Active catch flags in a fixed order, so badges read consistently row to row. */
 const FLAG_LABELS: [keyof Pokemon['flags'], string][] = [
   ['shiny', 'Shiny'],
   ['shadow', 'Shadow'],

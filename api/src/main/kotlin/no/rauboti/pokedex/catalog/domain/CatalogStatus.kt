@@ -3,9 +3,8 @@ package no.rauboti.pokedex.catalog.domain
 import java.time.Instant
 
 /**
- * Catalog sync status (contract schema `CatalogStatus`) for the "catalog freshness" UI. [syncedAt]
- * is null until the first successful sync; [stalePokemonCount] is **caller-scoped** — the
- * authenticated user's own Pokémon currently flagged stale, never other users' rows.
+ * Catalog freshness (contract `CatalogStatus`). [syncedAt] is null until the first successful sync;
+ * [stalePokemonCount] is **caller-scoped**, never a cross-user total.
  */
 data class CatalogStatus(
     val speciesCount: Long,
