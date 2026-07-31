@@ -6,13 +6,11 @@ import 'highcharts/modules/solid-gauge'
 import { HighchartsReact } from 'highcharts-react-official'
 
 /**
- * The per-stat IV breakdown as Pokémon GO-style KPI gauges (Highcharts solid-gauge, mirroring the
- * "multiple KPI" demo) — Attack / Defense / Stamina, each 0–15. The gauge arc is decorative
- * (`aria-hidden`); the value and label are real text beneath it, so the number stays themed by the
- * app and available to screen readers. Values come straight from the DTO (no client math, research D7).
+ * Per-stat IV gauges (Attack / Defense / Stamina, each 0–15). The arc is decorative (`aria-hidden`);
+ * the value and label are real text beneath it, so the number stays themed and screen-reader visible.
  *
- * NOTE: Highcharts is used directly here for now; it (and the Grid in [ProjectionsGrid]) is slated to
- * be lifted behind a shared charting wrapper later.
+ * NOTE: this is the only Highcharts use in the app, and it postdates research D4's "no charting"
+ * decision — see the web README's "Charting". Slated to move behind a shared wrapper.
  */
 
 const IV_MAX = 15

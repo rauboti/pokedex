@@ -8,15 +8,13 @@ import type {
 } from '@/api/schemas'
 
 /**
- * Shared sample data for MSW handlers (dev worker + test server) and for tests that need a
- * realistic payload. Shapes mirror the OpenAPI contract (`Me`, `Species`, `SpeciesMoves`,
- * `Pokemon`, `CatalogStatus`). Values are illustrative — the api owns the real catalog + all stat
- * math (research D7); here the `derived` block is hand-authored, not computed.
+ * Shared sample data for the MSW handlers and for tests needing a realistic payload. Shapes mirror the
+ * OpenAPI contract; values are illustrative and the `derived` block is hand-authored, not computed.
  */
 
 const SYNCED_AT = '2026-07-21T09:00:00Z'
 
-/** The signed-in player returned by `GET /api/auth/me` in mock mode (holds the `user` role). */
+/** Holds the `user` role. */
 export const authenticatedUser: Me = {
   sub: '10000000-0000-4000-8000-000000000001',
   name: 'Ada Lovelace',
@@ -24,10 +22,8 @@ export const authenticatedUser: Me = {
 }
 
 /**
- * Sample registrable species (`GET /api/species`). Deliberately covers the shapes later features
- * lean on: a dual-type (Venusaur, Grass/Poison), a regional form (Alolan Rattata, Dark/Normal), a
- * double-weakness combo (Golem, Rock/Ground — 2× Water/Grass, groundwork for the matchup view,
- * T026), and a single-type (Charmander, Fire).
+ * Deliberately covers the shapes the features lean on: a dual-type, a regional form, a
+ * double-weakness combo (Golem, Rock/Ground) and a single-type.
  */
 export const species: Species[] = [
   {
@@ -76,14 +72,10 @@ export const species: Species[] = [
   },
 ]
 
-/** Look up a seeded species fixture by id. */
 export const speciesById = (id: string): Species | undefined =>
   species.find((s) => s.id === id)
 
-/**
- * A species' move pool (`GET /api/species/{id}/moves`) — Venusaur, with a legacy Elite-TM charged
- * move (Frenzy Plant) and the sync-computed recommendation (US5/research D8).
- */
+/** Venusaur, including a legacy Elite-TM charged move and a recommendation. */
 export const venusaurMoves: SpeciesMoves = {
   speciesId: 'VENUSAUR',
   fastMoves: [
@@ -104,15 +96,13 @@ export const venusaurMoves: SpeciesMoves = {
   recommended: { fastMoveId: 'VINE_WHIP_FAST', chargedMoveId: 'FRENZY_PLANT' },
 }
 
-/** Move pools keyed by species id, for the `/api/species/{id}/moves` handler. */
 export const speciesMovesById: Record<string, SpeciesMoves> = {
   VENUSAUR: venusaurMoves,
 }
 
 /**
- * Derivation CP sentinels for the mock `POST /api/derivation` handler, so tests can exercise the
- * three outcomes deterministically: a unique match (default), a CP collision (two candidates that
- * differ by dust cost, US1 scenario 4), and an impossible combination (empty — SC-004).
+ * CP sentinels letting tests hit all three derivation outcomes deterministically: unique match,
+ * collision, and impossible.
  */
 export const COLLISION_CP = 500
 export const IMPOSSIBLE_CP = 13
@@ -126,14 +116,13 @@ const candidate = (level: number, dustCost: number): DerivationCandidate => ({
   dustCost,
 })
 
-/** The candidate list the mock returns for a given requested CP. */
 export const derivationCandidatesFor = (cp: number): DerivationCandidate[] => {
   if (cp === IMPOSSIBLE_CP) return []
   if (cp === COLLISION_CP) return [candidate(18, 3000), candidate(20, 3500)]
   return [candidate(20, 3500)]
 }
 
-/** Catalog status in mock mode — a populated, freshly-synced catalog with no stale Pokémon. */
+/** A populated, freshly-synced catalog with nothing stale. */
 export const catalogStatus: CatalogStatus = {
   speciesCount: species.length,
   moveCount: 11,
@@ -171,11 +160,7 @@ const perfectDerived = {
   ],
 }
 
-/**
- * Sample collection (`GET /api/pokemon`) — one hundo Venusaur with recorded moves, so the dev
- * worker renders a non-empty list. Tests supply their own per-case handlers rather than leaning on
- * this seed.
- */
+/** One hundo Venusaur with recorded moves, so the dev worker renders a non-empty list. */
 export const pokemon: Pokemon[] = [
   {
     id: 'aaaaaaaa-0000-4000-8000-000000000001',

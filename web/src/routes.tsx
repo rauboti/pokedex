@@ -4,11 +4,8 @@ import { RequireAuth } from '@/auth/RequireAuth'
 import { CollectionPage } from '@/pages/CollectionPage'
 import { PokemonDetailPage } from '@/pages/PokemonDetailPage'
 
-/** Route table: RequireAuth gates the app (login screen when signed out, no-access screen when
- *  signed in without a pokedex grant); signed-in pages render inside the RootLayout shell via its
- *  <Outlet/>. The collection is the landing page (`/`); a Pokémon's detail view lives at
- *  `/pokemon/:id`, reached by opening a row. Registration has no route of its own — it runs as a
- *  dialog inside the collection page (US1). */
+/** RequireAuth gates everything; signed-in pages render inside the RootLayout shell. Registration
+ *  has no route of its own — it is a dialog on the collection page. */
 export const routes: RouteObject[] = [
   {
     element: <RequireAuth />,

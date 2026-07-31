@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor
 import java.util.UUID
 
 /**
- * End-to-end proof of the post-sync staleness rescan (FR-013/SC-005, closing the T010 seam). Against a
+ * End-to-end proof of the post-sync staleness rescan (FR-013/SC-005). Against a
  * real Postgres (Testcontainers) with the external [GamedataClient] MockK-stubbed: a registered
  * Pokémon whose species is rebalanced (its stored level no longer yields the recorded CP) is flagged
  * `stale=true` by the next successful sync; a caught Pokémon of an unchanged species is left untouched;

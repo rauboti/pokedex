@@ -12,11 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * The catalog endpoints. `GET /api/catalog` reports counts, last-sync time and the caller's stale count
- * for the freshness UI; `POST /api/catalog/sync` triggers a sync and returns the refreshed status.
- * The admin-only gate on sync lives in the security chain ([no.rauboti.pokedex.config.SecurityConfig]
- * maps `POST /api/catalog/sync` to `hasRole("admin")`); both endpoints require an authenticated
- * pokedex user. The caller's `sub` scopes the stale count.
+ * The catalog endpoints. The admin-only gate on sync lives in the security chain, not here; the
+ * caller's `sub` scopes the stale count.
  */
 @RestController
 class CatalogController(

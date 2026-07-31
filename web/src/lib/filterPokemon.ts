@@ -1,28 +1,18 @@
 import type { Pokemon } from '@/api/schemas'
 
-/**
- * Pure client-side collection filtering (research D10). `GET /api/pokemon` returns the caller's full
- * collection; the browser slices it with these predicates — no server-side query params. Sorting is
- * the sibling concern in `./sortPokemon`.
- */
+/** Pure client-side collection filtering — there are no server-side query params. */
 
-/** The five boolean markers a Pokémon can carry (mirrors `Pokemon.flags`). */
 export type PokemonFlag =
   'shiny' | 'shadow' | 'lucky' | 'purified' | 'bestBuddy'
 
-/**
- * A collection filter. Every provided field narrows the result with AND semantics; an omitted (or
- * empty) field imposes no constraint.
- */
+/** Fields combine with AND; an omitted or empty field imposes no constraint. */
 export interface PokemonFilter {
-  /** Case-insensitive substring over the species name (nicknames are unsupported — spec assumption). */
+  /** Case-insensitive substring over the species name; there are no nicknames. */
   species?: string
-  /** Type names to keep — a Pokémon matches if it has **any** of them (OR; dual-types match on
-   *  either). Empty/undefined imposes no constraint. */
+  /** OR semantics — a dual-type matches on either of its types. */
   types?: string[]
-  /** Flags that must **all** be set (AND). */
   flags?: PokemonFlag[]
-  /** When set, keeps only rows whose stale state equals this (the FR-013 rescan badge). */
+  /** Keeps only rows whose stale state equals this. */
   stale?: boolean
 }
 
@@ -40,7 +30,7 @@ const matchesTypes = (p: Pokemon, types: string[]): boolean =>
 const hasFlags = (p: Pokemon, flags: PokemonFlag[]): boolean =>
   flags.every((f) => p.flags[f])
 
-/** Apply a {@link PokemonFilter}, returning a new array (the input is never mutated). */
+/** Non-mutating. */
 export const filterPokemon = (
   list: Pokemon[],
   filter: PokemonFilter,
@@ -53,8 +43,7 @@ export const filterPokemon = (
       (filter.stale === undefined || p.stale === filter.stale),
   )
 
-/** True when any search/filter constraint is active (used to pick the right empty state; sort is
- *  always set, so it isn't a constraint). */
+/** Picks the right empty state. Sort is always set, so it never counts as a constraint. */
 export const hasActiveFilters = (filter: PokemonFilter): boolean =>
   !!filter.species?.trim() ||
   (filter.types?.length ?? 0) > 0 ||

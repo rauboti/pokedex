@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
  * pure cycle DPS diverges from community on the *fast* move (Swampert wants Mud Shot but DPS favours
  * Water Gun; Metagross wants Bullet Punch but DPS favours Fury Cutter), we anchor on the charged move
  * — the meaningful "does it have the signature move" signal — rather than tune the heuristic to the
- * test. This divergence is a flagged D8 calibration item for T034.
+ * test. The divergence is a flagged D8 calibration item.
  */
 class MovesetRankerTest {
     private fun fast(

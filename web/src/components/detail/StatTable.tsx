@@ -1,15 +1,12 @@
 import { Table } from '@chakra-ui/react'
 
 /**
- * The shared detail-view stat table: the current stats (one row) and the level projections use the
- * same columns and presentation, so both render through here. Chakra `Table` (`line` variant) inside a
- * `Table.ScrollArea` for the border + rounding; rows are forced transparent because the variant
- * otherwise fills them with the solid `bg` token (near-black in dark mode). Values are shown verbatim
- * from the DTO — no client stat math (research D7).
+ * Shared by the current stats and the level projections, so both keep identical columns. Rows are
+ * forced transparent because the `line` variant otherwise fills them with the solid `bg` token.
  */
 
 export type StatRow = {
-  /** Row label — e.g. `Current`, `L40`, `Best Buddy`. */
+  /** e.g. `Current`, `L40`, `Best Buddy`. */
   target: string
   level: number
   cp: number
@@ -19,7 +16,7 @@ export type StatRow = {
   stamina: number
 }
 
-/** Effective stats are fractional; level/CP/HP are whole. Drop the trailing `.0`. */
+/** Effective stats are fractional, level/CP/HP whole — drop a trailing `.0`. */
 const fmt = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(1))
 
 export const StatTable = ({ rows }: { rows: StatRow[] }) => (

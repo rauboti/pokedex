@@ -8,7 +8,7 @@ import type { Pokemon, Species } from '@/api/schemas'
 /**
  * Presentation of the collection grid (US2 additions): type badges per row, the FR-013 stale
  * "re-check" badge, and the two empty states — nothing registered vs. filters matching nothing.
- * Filtering/sorting itself is the pure `lib/` concern (T021); this only renders what it is handed.
+ * Filtering and sorting are the pure `lib/` concern; this only renders what it is handed.
  */
 
 const species = (over: Partial<Species> = {}): Species => ({

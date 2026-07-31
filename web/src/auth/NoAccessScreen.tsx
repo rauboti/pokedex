@@ -3,10 +3,8 @@ import { Button } from '@rauboti/ui'
 import { useAuth } from './AuthContext'
 
 /**
- * Shown by the RequireAuth guard when the user is signed in to hive but has no pokedex grant
- * (empty `roles` / 403 on the data API). A sibling of [LoginScreen], not a routed page: they *are*
- * authenticated, they just can't use pokedex — so the only action is to sign out (e.g. to switch
- * accounts). Access is granted in hive, out of band.
+ * Signed in to hive but without a pokedex grant. They *are* authenticated, so the only action is to
+ * sign out and switch accounts — access itself is granted in hive, out of band.
  */
 export const NoAccessScreen = () => {
   const { signOut } = useAuth()

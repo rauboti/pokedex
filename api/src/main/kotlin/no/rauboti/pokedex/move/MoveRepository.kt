@@ -8,11 +8,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-/**
- * Access to moves and species move-pools for the write path and DTO assembly. [poolMoveIds]
- * gives the set a species can legally know; [findByIds] resolves recorded move ids to their
- * display shape (with the fast/charged flag used for slot validation).
- */
+/** Access to moves and species move-pools for the write path and DTO assembly. */
 @Repository
 class MoveRepository(
     private val jdbc: JdbcClient,
@@ -42,7 +38,6 @@ class MoveRepository(
             .update()
     }
 
-    /** Resolve the given move ids to [MoveDto]s (empty in → empty out). */
     fun findByIds(ids: Collection<String>): List<MoveDto> {
         if (ids.isEmpty()) return emptyList()
         return jdbc
@@ -58,7 +53,6 @@ class MoveRepository(
             }.list()
     }
 
-    /** The move ids in a species' pool (from `species_move`). */
     fun poolMoveIds(speciesId: String): Set<String> =
         jdbc
             .sql("SELECT move_id FROM species_move WHERE species_id = :sid")

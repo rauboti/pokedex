@@ -3,15 +3,13 @@ package no.rauboti.pokedex.stats
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * The vendored power-up stardust cost per level, loaded from the classpath resource
- * `reference/dust.json`. Used only to label CP-collision candidates by dust cost. Covers the
- * power-up-from levels 1.0–49.5; there is no cost beyond the level cap, so [dust] returns null
- * for level 50 and above. Pure Kotlin — no Spring.
+ * The vendored power-up stardust cost per level, used only to label CP-collision candidates.
+ * Covers power-up-from levels 1.0–49.5 — past the cap there is no cost, so [dust] returns null.
  */
 object DustTable {
     private val byHalfStep: Map<Int, Int>
 
-    /** All levels that have a power-up-from cost, ascending (1.0 … 49.5). */
+    /** Ascending: 1.0 … 49.5. */
     val levels: List<Double>
 
     init {
@@ -28,7 +26,6 @@ object DustTable {
         levels = map.keys.map { it / 2.0 }
     }
 
-    /** The stardust cost to power up from [level], or null when there is none (level cap reached). */
     fun dust(level: Double): Int? = byHalfStep[key(level)]
 
     private fun key(level: Double): Int = Math.round(level * 2).toInt()

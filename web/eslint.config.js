@@ -20,14 +20,12 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
-  // Test files and the test harness aren't shipped through Vite's Fast Refresh,
-  // so its "only export components" rule doesn't apply.
+  // Tests and the test harness don't go through Fast Refresh.
   {
     files: ['**/*.test.{ts,tsx}', 'src/test/**', 'src/mocks/**'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },
   },
-  // Disable stylistic rules that conflict with Prettier (keep last).
-  prettier,
+  prettier, // keep last — disables rules that conflict with Prettier
 ])

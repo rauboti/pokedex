@@ -5,11 +5,10 @@ import { searchSpecies, type Species } from '@/api/schemas'
 import { TypeBadge } from './TypeBadge'
 
 /**
- * Species picker for the register/edit dialog (US1). While no species is chosen it's a search: type
- * into `GET /api/species` (registrable species only) and pick from the matches, each showing its
- * form and type icons. In-flight requests are abandoned when the query changes (an AbortController +
- * liveness guard) so the last keystroke wins. Once chosen, it collapses to a **selected-value chip**
- * — the species name with its type badges inline — plus a Change action that reopens the search.
+ * Server-searched species picker; collapses to a selected-value chip once chosen. In-flight requests
+ * are abandoned when the query changes (AbortController + liveness guard) so the last keystroke wins.
+ *
+ * Bespoke rather than a DS `Combobox`: that component has no async/remote-item support yet.
  */
 
 const displayName = (s: Species) => (s.form ? `${s.name} (${s.form})` : s.name)
@@ -37,7 +36,7 @@ export const SpeciesSearch = ({
         if (active) setResults(found)
       })
       .catch(() => {
-        // Aborted or transient — leave the field usable; the next keystroke retries.
+        // Aborted or transient — leave the field usable and let the next keystroke retry.
       })
     return () => {
       active = false
@@ -51,7 +50,6 @@ export const SpeciesSearch = ({
     setShowResults(false)
   }
 
-  // Selected state: the chosen species is the value — name + its type badges — with a Change action.
   if (selected) {
     return (
       <Box>

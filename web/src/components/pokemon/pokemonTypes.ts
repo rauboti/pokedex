@@ -18,15 +18,13 @@ import steel from '@/assets/types/steel.svg'
 import water from '@/assets/types/water.svg'
 
 /**
- * Canonical Pokémon type data, single-sourced so the badge icons (TypeBadge) and the type filter
- * (PokemonFilters) can never drift. Kept out of the component file so it can export non-components
- * (react-refresh).
+ * Canonical type data, single-sourced so the badges and the type filter can't drift. Kept out of the
+ * component file so it can export non-components (react-refresh).
  */
 
 /**
- * Canonical type name → its vendored colored badge SVG (partywhale/pokemon-type-icons, MIT — see
- * `src/assets/types/LICENSE`). Keys match the API's canonical type names (`POKEMON_TYPE_GRASS` →
- * `"Grass"`), so a `Species.types` entry indexes directly.
+ * Vendored colored badge SVGs (partywhale/pokemon-type-icons, MIT — see `src/assets/types/LICENSE`).
+ * Keys match the api's canonical type names, so a `Species.types` entry indexes directly.
  */
 export const TYPE_ICONS: Record<string, string> = {
   Bug: bug,
@@ -49,5 +47,5 @@ export const TYPE_ICONS: Record<string, string> = {
   Water: water,
 }
 
-/** The 18 canonical Pokémon type names (alphabetical) — the catalog carries only these. */
+/** The catalog carries only these 18. */
 export const POKEMON_TYPES = Object.keys(TYPE_ICONS)

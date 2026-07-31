@@ -1,25 +1,19 @@
 # syntax=docker/dockerfile:1
 
-# ---- Build stage: install deps + produce the static Vite build ----
+# ---- Build stage ----
 FROM node:22-alpine AS build
 WORKDIR /web
 RUN corepack enable
 
-# Registry auth for the private @rauboti scope. The token is supplied as a
-# BuildKit secret (never written into an image layer) and substituted into the
-# yarnrc template exactly as CI does (pulse CI workflow). After install we
-# restore the *placeholder* template over the real-token file: Yarn still needs
-# its `nodeLinker: node-modules` setting at build time (without a yarnrc it falls
-# back to PnP and ignores node_modules), but the real token must not persist in
-# the layer. Both steps run in one RUN, so the token version is never committed.
+# The @rauboti registry token is substituted into the yarnrc from a BuildKit secret, then the
+# placeholder template is restored over it — all in one RUN, so the real token never lands in a
+# layer. The yarnrc itself must stay: without it Yarn falls back to PnP and ignores node_modules.
 COPY .yarnrc.yml.example package.json yarn.lock ./
 RUN --mount=type=secret,id=rauboti_token \
     sed "s|<your-token>|$(cat /run/secrets/rauboti_token)|" .yarnrc.yml.example > .yarnrc.yml \
  && yarn install --immutable \
  && cp .yarnrc.yml.example .yarnrc.yml
 
-# Sources, then the production build. A production build serves same-origin, so
-# the client calls /api, which nginx proxies to the api service (see nginx.conf).
 COPY . .
 RUN yarn build
 

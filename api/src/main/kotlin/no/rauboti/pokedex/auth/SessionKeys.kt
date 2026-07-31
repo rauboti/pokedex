@@ -1,23 +1,17 @@
 package no.rauboti.pokedex.auth
 
 /**
- * The server-side session attribute keys for the hive login (BFF; research D1). The browser holds
- * only the session cookie — every token and the one-time login secrets live on the [jakarta.servlet.http.HttpSession].
- *
- * Centralised here because the collaborators share them: [no.rauboti.pokedex.config.SessionTokenAuthenticationFilter]
- * reads/renews [ACCESS_TOKEN]/[REFRESH_TOKEN] on every API request, and `AuthController` writes
- * the OAuth keys across the Authorization-Code + PKCE dance.
+ * Server-side session attribute keys for the hive login. Centralised because `AuthController` writes
+ * them across the PKCE handshake and `SessionTokenAuthenticationFilter` reads and renews them.
  */
 object SessionKeys {
-    /** CSRF `state` minted at `/auth/login`, verified at `/auth/callback` (one-time). */
+    /** CSRF `state`, minted at login and verified once at the callback. */
     const val STATE = "pokedex.oauth.state"
 
-    /** PKCE `code_verifier` minted at `/auth/login`, sent in the token exchange (one-time). */
+    /** PKCE `code_verifier`, minted at login and spent once in the token exchange. */
     const val VERIFIER = "pokedex.oauth.verifier"
 
-    /** The short-lived hive access token — authenticates API requests via the session filter. */
     const val ACCESS_TOKEN = "pokedex.hive.accessToken"
 
-    /** The rotating hive refresh token — renews the access token silently, server-side. */
     const val REFRESH_TOKEN = "pokedex.hive.refreshToken"
 }

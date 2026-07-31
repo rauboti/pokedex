@@ -24,13 +24,8 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 /**
- * The Pokémon CRUD domain logic. Enforces the data-model write invariants on every write:
- *  0. the species must be registrable (mega/temporary forms rejected on create and species change);
- *  1. the solver must confirm (species, IVs, CP) → level — ambiguous requires a chosen candidate,
- *     no match is a 422;
- *  2. recorded moves must be in the species pool and fast/charged-slot correct;
- *  3. an edit touching species/IVs/CP re-derives the level and clears `stale`.
- * All reads are user-scoped and carry the server-computed derived block.
+ * The Pokémon CRUD domain logic. Enforces the four write invariants listed in the api README
+ * ("Write invariants") on every write; all reads are user-scoped and carry the derived block.
  */
 @Service
 class PokemonService(
@@ -109,7 +104,7 @@ class PokemonService(
                 ?: throw NotFoundException("unknown-species", "No species with id '$speciesId'")
         if (patch.speciesId != null) requireRegistrable(speciesId)
 
-        // Invariant 3: re-derive + clear stale only when the derivation inputs change.
+        // Invariant 3: re-derive and clear `stale` only when the derivation inputs actually change.
         val reDerive =
             patch.speciesId != null ||
                 patch.ivAtk != null ||

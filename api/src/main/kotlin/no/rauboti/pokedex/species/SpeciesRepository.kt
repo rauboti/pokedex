@@ -10,13 +10,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-/**
- * Read access to the synced species catalog for search. Matches a case-insensitive name substring,
- * restricted to **registrable** species (mega/temporary battle forms are never returned), ordered
- * by dex number then form (base form before named forms), capped by the caller's limit.
- * `position(lower(:q) in lower(name))` is a true substring test — no LIKE wildcard semantics leak
- * from the query string.
- */
+/** Read and write access to the synced species catalog. */
 @Repository
 class SpeciesRepository(
     private val jdbc: JdbcClient,
@@ -58,6 +52,7 @@ class SpeciesRepository(
 
     fun count(): Long = jdbc.sql("SELECT count(*) FROM species").query(Long::class.java).single()
 
+    /** `position(... in ...)` is a true substring test — no LIKE wildcards leak in from the query. */
     fun search(
         query: String,
         limit: Int,
@@ -79,9 +74,8 @@ class SpeciesRepository(
             .list()
 
     /**
-     * A single species by its stable id, or null if absent. Unlike [search] this is not filtered by
-     * `registrable` — it's a direct lookup (e.g. the derivation preview needs base stats for any id
-     * the caller supplies; the registrable check on *save* lives in the write path).
+     * Deliberately *not* filtered by `registrable`, unlike [search] — the derivation preview needs base
+     * stats for any id supplied. The registrable check on save lives in the write path.
      */
     fun findById(id: String): Species? =
         jdbc
@@ -97,7 +91,6 @@ class SpeciesRepository(
             .optional()
             .orElse(null)
 
-    /** Resolve several species by id in one query (empty in → empty out) — for collection assembly. */
     fun findByIds(ids: Collection<String>): List<Species> {
         if (ids.isEmpty()) return emptyList()
         return jdbc
@@ -114,9 +107,8 @@ class SpeciesRepository(
     }
 
     /**
-     * The recommended-moveset ids stored on a species, or null if the species does not exist —
-     * lets the moves endpoint tell 404 (no such species) from a species with no recommendation yet
-     * (both ids null). The write path is [updateRecommendedMoves], run after each sync.
+     * Null means no such species — which is how the moves endpoint tells a 404 from a species that
+     * simply has no recommendation yet (present, but both ids null).
      */
     fun findRecommendedMoveIds(id: String): RecommendedMoveIds? =
         jdbc
@@ -131,7 +123,6 @@ class SpeciesRepository(
             }.optional()
             .orElse(null)
 
-    /** Store (or clear, with nulls) a species' sync-computed recommended moveset. */
     fun updateRecommendedMoves(
         speciesId: String,
         fastMoveId: String?,
@@ -150,7 +141,7 @@ class SpeciesRepository(
             .update()
     }
 
-    /** The registrable flag for a species (write invariant 0), or null if the id is unknown. */
+    /** Null if the id is unknown. */
     fun isRegistrable(id: String): Boolean? =
         jdbc
             .sql("SELECT registrable FROM species WHERE id = :id")
@@ -159,12 +150,11 @@ class SpeciesRepository(
             .optional()
             .orElse(null)
 
-    /** The most recent sync time across the catalog, or null before the first sync. */
+    /** Null before the first sync. */
     fun lastSyncedAt(): Instant? =
         jdbc
             .sql("SELECT max(synced_at) AS ts FROM species")
-            // max() over an empty table yields one row with a null value; `.single()` would reject
-            // that null, so take the (possibly-null) single element via list().
+            // max() over an empty table yields one null-valued row, which `.single()` would reject.
             .query { rs, _ -> rs.getTimestamp("ts")?.toInstant() }
             .list()
             .firstOrNull()

@@ -23,7 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.UUID
 
 /**
- * The BFF security chain from pokedex's side (T008, research D1): a *consumer* of hive that validates
+ * The BFF security chain from pokedex's side: a *consumer* of hive that validates
  * hive-issued JWTs offline. This exercises the wired [SecurityConfig] end-to-end through the real
  * filter chain (full context + actuator + Flyway'd Postgres), asserting only the authz outcomes —
  * the claim validators/authorities mapping are proven in isolation by [JwtValidationTest].
@@ -36,10 +36,9 @@ import java.util.UUID
 @Import(SecurityConfigTest.StubHiveTokenClient::class)
 class SecurityConfigTest : IntegrationTest() {
     /**
-     * [SessionTokenAuthenticationFilter] needs a [HiveTokenClient] bean; the production RestClient
-     * implementation lands with the auth BFF (T009). Never invoked here — the `jwt()`
-     * post-processor authenticates before the filter would consult the session. `@Primary` keeps
-     * this stub winning once the production `@Component` exists.
+     * [SessionTokenAuthenticationFilter] needs a [HiveTokenClient] bean, but it is never invoked here —
+     * the `jwt()` post-processor authenticates before the filter would consult the session. `@Primary`
+     * keeps this stub ahead of the production `@Component`.
      */
     @TestConfiguration(proxyBeanMethods = false)
     class StubHiveTokenClient {
@@ -74,7 +73,7 @@ class SecurityConfigTest : IntegrationTest() {
     }
 
     // Not 401 (authenticated) and not 403 (authorized) — the request cleared the security chain.
-    // The endpoint itself lands in US1 (T017); here we only assert the authz boundary is passed.
+    // Only the authz boundary matters here, not the endpoint's own behaviour.
     private val clearedSecurity: Matcher<Int> = allOf(not(equalTo(401)), not(equalTo(403)))
 
     @Test
@@ -88,7 +87,7 @@ class SecurityConfigTest : IntegrationTest() {
     fun `an admin-role caller also clears the security chain (admin-only token)`() {
         // Admins may authenticate with roles=[admin] (no "user"), so the data API must accept
         // `admin` too — hence hasAnyRole("user", "admin"), not hasRole("user"). (Admin additionally
-        // unlocks the admin-only catalog sync, gated per-endpoint in T010.)
+        // unlocks the admin-only catalog sync, which is gated per-endpoint.)
         mvc
             .get("/api/pokemon") { with(user(roles = arrayOf("admin"))) }
             .andExpect { match(status().`is`(clearedSecurity)) }

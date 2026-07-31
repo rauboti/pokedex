@@ -2,18 +2,12 @@ import { Box, HStack } from '@chakra-ui/react'
 import { StarIcon } from '@rauboti/ui'
 
 /**
- * A Pokémon GO-style IV star rating — the collection card's bottom-left signal, replacing the raw
- * IV% number. Mirrors the game's appraisal: **yellow** stars scale with the IV band (one per 25%),
- * and a **perfect** catch shows the full **four pink** stars — a hundo stands out by both the extra
- * star and the colour.
+ * A Pokémon GO-style IV rating, mirroring the game's appraisal:
  *
- *   IV 25–49% → 1 yellow   ·   50–74% → 2 yellow   ·   75–99% → 3 yellow   ·   100% → 4 pink
+ *   25–49% → 1 yellow  ·  50–74% → 2 yellow  ·  75–99% → 3 yellow  ·  100% → 4 pink
  *
- * Stars are the DS `StarIcon` (lucide `star`) filled via `fill="currentColor"` so they read solid.
- * `ivPercent`/`perfect` are read straight from the server-derived DTO (no client stat math, research
- * D7). The exact percentage stays available to screen readers and on hover via the group's label,
- * so nothing is lost by showing stars instead of the number. A sub-25% catch shows no stars (the
- * label still carries the value).
+ * Below 25% shows no stars. The exact percentage stays in the group's label, so screen readers and
+ * hover lose nothing by the stars replacing the number.
  */
 
 const Star = ({ tone }: { tone: 'yellow' | 'pink' }) => (

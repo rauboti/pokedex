@@ -4,10 +4,8 @@ import { useSearchParams } from 'react-router'
 import { LOGIN_PATH } from '@/api/client'
 
 /**
- * Unauthenticated landing: a single "Sign in with Hive" action that navigates to the BFF's
- * `/auth/login` (a full-page nav — it 302s to hive, so it can't be a client route). When hive is
- * unreachable the OAuth callback bounces back with `?error=signin_unavailable`; we surface that as
- * a Callout (T009).
+ * Sign-in landing. The action is a full-page navigation to `/auth/login`, not a client route, since it
+ * 302s to hive. An unreachable hive bounces back with `?error=signin_unavailable`, surfaced as a Callout.
  */
 export const LoginScreen = () => {
   const [params] = useSearchParams()

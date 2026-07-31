@@ -10,11 +10,8 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
 /**
- * Populates the catalog on first boot: when the app is ready and the catalog is empty, run one sync
- * (startup-when-empty). Best-effort — if the game-data source is unavailable the app
- * still starts (an admin can trigger `POST /api/catalog/sync` later); a populated catalog is left
- * untouched. Disabled under `pokedex.gamedata.sync-on-startup=false` (set in the test profile so the
- * suite never reaches for the network).
+ * Runs one sync at startup when the catalog is empty. Best-effort: an unavailable source must not stop
+ * the app from starting, since an admin can trigger a sync later.
  */
 @Component
 class CatalogInitializer(

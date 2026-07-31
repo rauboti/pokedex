@@ -11,9 +11,7 @@ import type { ReactNode } from 'react'
 import { ApiError, setOnForbidden } from '@/api/client'
 import { logout, me, type Me } from '@/api/schemas'
 
-/** Session state, resolved once the `/api/auth/me` probe settles. `noAccess` is a signed-in
- *  hive user with no pokedex grant (empty `roles`) — distinct from `unauthenticated` (not signed
- *  in). */
+/** `noAccess` (signed in, no pokedex grant) is deliberately distinct from `unauthenticated`. */
 export type AuthState =
   | { status: 'loading'; user: null }
   | { status: 'authenticated'; user: Me }
@@ -21,21 +19,16 @@ export type AuthState =
   | { status: 'noAccess'; user: null }
 
 type AuthContextValue = AuthState & {
-  /** Re-run the session probe (e.g. after returning from the hive callback). */
   reload: () => Promise<void>
-  /** Clear the server session (`POST /api/auth/logout`) and drop to unauthenticated. */
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 /**
- * Probe the session. A 401 means "not signed in". A signed-in user with no pokedex role (empty
- * `roles`) has no pokedex access — resolved here from the `me` payload, so there's no flash of the
- * app before a data call fails. The probe opts out of the client's auto-redirect (so the app can
- * render a login screen instead of bouncing to hive) and of the global no-access handler. The `me`
- * endpoint itself is authenticated-only today; the 403 catch is a safety net should it ever be
- * gated.
+ * Resolves no-access from the `me` payload rather than waiting for a data call to fail, so the app
+ * never flashes before the no-access screen. Opts out of the client's auto-redirect so a login screen
+ * can render instead of bouncing to hive; the 403 catch is a safety net if `me` is ever gated.
  */
 const fetchSession = async (signal: AbortSignal): Promise<AuthState> => {
   try {
@@ -65,8 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fetchSession(controller.signal).then((next) => {
       if (!controller.signal.aborted) setState(next)
     })
-    // Any later data call that 403s (e.g. a role revoked mid-session) drops the whole app to the
-    // no-access screen, no matter which request surfaced it.
+    // A later 403 (e.g. a role revoked mid-session) drops the whole app, whichever call surfaced it.
     setOnForbidden(() => setState({ status: 'noAccess', user: null }))
     return () => {
       controller.abort()
@@ -80,8 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   const signOut = useCallback(async () => {
-    // Best-effort server logout; drop to unauthenticated regardless so the guard shows the login
-    // screen (a dead session is already effectively logged out).
+    // Best-effort: drop to unauthenticated regardless, since a dead session is already logged out.
     try {
       await logout()
     } finally {
@@ -94,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   )
 }
 
-/** Access the current session. Throws if used outside an `<AuthProvider>`. */
+/** Throws outside an `<AuthProvider>`. */
 export const useAuth = (): AuthContextValue => {
   const value = useContext(AuthContext)
   if (value === null) {

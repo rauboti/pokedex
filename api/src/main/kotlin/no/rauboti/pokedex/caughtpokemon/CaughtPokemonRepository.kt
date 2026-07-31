@@ -8,10 +8,9 @@ import java.sql.ResultSet
 import java.util.UUID
 
 /**
- * Persistence for the player-owned `caught_pokemon` table. Every read is scoped by `user_id` — a row
- * is invisible to any other user, so a wrong-owner find/update/delete is a no-op (the caller
- * surfaces 404, indistinguishable from "unknown id"). `listAll` + `markStale` are the cross-user
- * hooks the post-sync staleness rescan uses; all other reads stay user-scoped.
+ * Persistence for `caught_pokemon`. Every query is scoped by `user_id`, so a wrong-owner
+ * find/update/delete is simply a no-op that the caller reports as 404 (FR-014). [findAll] and
+ * [markAsStale] are the deliberate cross-user exceptions, for the post-sync rescan only.
  */
 @Repository
 class CaughtPokemonRepository(
@@ -70,8 +69,7 @@ class CaughtPokemonRepository(
             .optional()
             .orElse(null)
 
-    /** Update the mutable fields of the caller's own row; returns the updated row, or null if the id
-     *  isn't owned by [CaughtPokemon.userId] (wrong owner / unknown id). */
+    /** Null when the id isn't owned by the caller — wrong owner and unknown id are indistinguishable. */
     fun update(pokemon: CaughtPokemon): CaughtPokemon? =
         jdbc
             .sql(
@@ -117,10 +115,10 @@ class CaughtPokemonRepository(
             .param("uid", userId)
             .update() > 0
 
-    /** Every user's rows — the post-sync rescan (T018) re-derives across the whole table. */
+    /** Cross-user by design — the post-sync rescan re-derives the whole table. */
     fun findAll(): List<CaughtPokemon> = jdbc.sql("SELECT $COLUMNS FROM caught_pokemon").query { rs, _ -> map(rs) }.list()
 
-    /** Flag the given rows stale (T018); a no-op on an empty id list. */
+    /** Cross-user by design, see [findAll]. */
     fun markAsStale(ids: List<UUID>) {
         if (ids.isEmpty()) return
         jdbc
@@ -129,7 +127,6 @@ class CaughtPokemonRepository(
             .update()
     }
 
-    /** The authenticated caller's own stale Pokémon count; other users' rows are never counted. */
     fun countStaleByUserId(userId: String): Long =
         jdbc
             .sql("SELECT count(*) FROM caught_pokemon WHERE user_id = :uid AND stale = true")

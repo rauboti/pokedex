@@ -19,13 +19,9 @@ import { filterPokemon, hasActiveFilters } from '@/lib/filterPokemon'
 import { sortPokemon } from '@/lib/sortPokemon'
 
 /**
- * The collection landing page (`/`, US1 + US2). Fetches the caller's Pokémon and the catalog status
- * on mount, frames them in the @rauboti/ui `PageHeader` (with the Register dialog as its action), and
- * shows a loading indicator / error Callout / empty state as appropriate. Filtering + sorting run
- * client-side over the full collection via the pure `lib/` functions (research D10); a row can be
- * edited (the prefilled dialog, re-deriving on save) or deleted (after a confirmation). A stale row's
- * "re-enter" opens the same edit flow and the successful re-derive clears its badge (FR-013).
- * Derived values are rendered straight from the DTO — no client stat math (research D7).
+ * The landing page (`/`). Fetches the collection and catalog status on mount; filtering and sorting
+ * then run client-side over the full list via the pure `lib/` functions. A stale row's "re-enter"
+ * opens the ordinary edit flow, and a successful re-derive clears its badge.
  */
 
 const displayName = (species: Pokemon['species']) =>
@@ -57,7 +53,7 @@ export const CollectionPage = () => {
         setFailed(true)
         setLoading(false)
       })
-    // Catalog freshness is secondary — a failure here doesn't blank the collection.
+    // Secondary — a failure here must not blank the collection.
     getCatalog()
       .then((status) => {
         if (active) setCatalog(status)

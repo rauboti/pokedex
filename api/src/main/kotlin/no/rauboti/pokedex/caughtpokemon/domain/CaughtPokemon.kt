@@ -5,10 +5,8 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * A registered Pokémon as stored (data-model `caught_pokemon`). `level` is the derived cache written only
- * after solver confirmation; `stale` is set by the post-sync rescan. Move-slot ids are nullable FKs to
- * `move` (null = unrecorded). Derived values (HP, effective stats, IV%, projections) are computed on read
- * and never stored — this row is the raw record.
+ * A registered Pokémon exactly as stored — the raw record. Everything derived (HP, effective stats,
+ * IV%, projections) is computed on read and never persisted here.
  */
 data class CaughtPokemon(
     val id: UUID,

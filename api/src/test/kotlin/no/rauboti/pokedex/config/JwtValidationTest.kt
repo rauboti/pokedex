@@ -20,11 +20,10 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 /**
- * The consumer contract from pokedex's side (research D1), proven with only public inputs: a token
- * signed by an RS256 key whose public half is the "JWKS", validated by the *production* decoder
- * validators (iss/aud/exp) and authorities converter. Mirrors avec's `JwtValidationTest`, with
- * `aud=pokedex` — the aud check is what scopes hive's flat `roles` claim to pokedex (avec T006
- * discovery); pokedex mints its own token here since it is the consumer, not the issuer.
+ * The consumer contract from pokedex's side, proven with only public inputs: a token signed by an
+ * RS256 key whose public half stands in for the JWKS, validated by the *production* decoder validators
+ * (iss/aud/exp) and authorities converter. The `aud` check is what scopes hive's flat `roles` claim to
+ * pokedex. The test mints its own token, since pokedex is the consumer and not the issuer.
  *
  * These are the checks the full-context `SecurityConfigTest` cannot cover — there the `jwt()`
  * post-processor injects a ready-made authentication and bypasses the real decoder/validators. No

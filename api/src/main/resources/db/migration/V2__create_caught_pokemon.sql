@@ -1,18 +1,12 @@
--- TABLES
-
--- Registered Pokémon: one registered Pokémon owned by exactly one player (data-model.md).
--- `user_id` is the hive JWT `sub` claim — every read is user-scoped and it is never
--- exposed in responses. `species_id` must exist in the synced catalog (unknown species
--- unregistrable — spec edge case); non-registrable (mega) species are rejected in the
--- service layer, not here (write invariant 0).
+-- One registered Pokémon, owned by exactly one player. `user_id` is the hive JWT `sub` —
+-- every read is user-scoped (FR-014) and it is never exposed in responses.
 --
--- `level` is a derived cache: written only by the API after solver confirmation,
--- user-picked among candidates on a CP collision, stored as half-steps (app-enforced).
--- `stale` is set by the post-sync rescan when CP+IVs no longer yield `level` and cleared
--- by a re-deriving edit. `shadow` and `best_buddy` are display/projection flags only and
--- never alter stored stats (spec edge cases). The move-slot FKs point at `move` (not
--- `species_move`) so a recorded move survives a pool change; NULL = unrecorded. All
--- derived values (HP, effective stats, IV%, projections) are computed on read, never stored.
+-- `level` is a derived cache: only ever written after solver confirmation (user-picked among
+-- candidates on a CP collision), stored as app-enforced half-steps. `stale` is set by the
+-- post-sync rescan when CP+IVs no longer yield `level`, and cleared by a re-deriving edit.
+-- The move-slot FKs point at `move`, not `species_move`, so a recorded move survives a pool
+-- change; NULL means unrecorded. Everything else derived (HP, stats, IV%, projections) is
+-- computed on read, never stored.
 create table caught_pokemon (
     id                uuid          primary key default gen_random_uuid(),
     user_id           text          not null,
@@ -42,7 +36,4 @@ create table caught_pokemon (
     constraint caught_pokemon_level_check check (level between 1 and 51)
 );
 
--- INDEXES
-
--- All reads are user-scoped (FR-014); ordering happens client-side (research D10).
 create index idx_caught_pokemon_user on caught_pokemon (user_id);

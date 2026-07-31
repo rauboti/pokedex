@@ -1,11 +1,8 @@
 package no.rauboti.pokedex.common
 
 /**
- * Base for pokedex's domain exceptions, carrying the RFC-7807 pair the web app needs:
- * [message] becomes the human-readable `detail`, [code] the stable machine-readable
- * identifier the frontend keys on (the web Zod `Problem` schema carries `code`) —
- * e.g. `unknown-species`, `impossible-combination`, `level-not-a-candidate`,
- * `move-not-in-pool`, `gamedata-unavailable`.
+ * Base for pokedex's domain exceptions, carrying the RFC-7807 pair the web app needs: [message]
+ * becomes the human-readable `detail`, [code] the stable machine identifier the SPA keys on.
  */
 abstract class ApiException(
     val code: String,
@@ -31,11 +28,7 @@ class ForbiddenException(
     message: String,
 ) : ApiException(code, message)
 
-/**
- * 422 — the input is well-formed but cannot be processed: an impossible species/IV/CP
- * combination, a level not among the solver's candidates, a non-registrable species, or a
- * move outside the species pool (pokedex's divergence from avec's 409).
- */
+/** 422 — well-formed but unprocessable: impossible CP/IV combination, move outside the pool, … */
 class UnprocessableException(
     code: String,
     message: String,
@@ -48,7 +41,7 @@ class HiveUnavailableException(
     cause: Throwable? = null,
 ) : ApiException(code, message, cause)
 
-/** 502 — the game-data source is unreachable or returned an unusable response (research D5). */
+/** 502 — the game-data source is unreachable or returned an unusable response. */
 class GamedataUnavailableException(
     code: String,
     message: String,

@@ -3,11 +3,8 @@ package no.rauboti.pokedex.caughtpokemon.domain
 import java.time.LocalDate
 
 /**
- * `PATCH /api/pokemon/{id}` body (contract `PokemonPatch`). Partial semantics: a null (or absent)
- * field leaves the current value unchanged. Changing `speciesId`/IVs/`cp` re-derives the level and
- * clears `stale` (write invariant 3); on such a re-derive, `level` disambiguates a CP collision.
- * (A field can be set but, with these semantics, not cleared back to null — clearing a recorded
- * move / catch date is out of scope for v1.)
+ * `PATCH /api/pokemon/{id}` body (contract `PokemonPatch`). Absent fields are left unchanged — which
+ * also means a field can be set but not cleared back to null; clearing is out of scope for v1.
  */
 data class PatchCaughtPokemon(
     val speciesId: String? = null,

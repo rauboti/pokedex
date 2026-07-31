@@ -10,12 +10,9 @@ import org.springframework.web.client.RestClientException
 import java.time.Duration
 
 /**
- * Fetches the raw game-data feed from the community source. Interface so [SyncService] can be tested
- * with a MockK stub at this boundary — no HTTP-level mock, matching every sibling app. Any transport
- * failure or unusable response is surfaced as [GamedataUnavailableException] (→ 502);
- * parsing/normalization is [GamedataNormalizer]'s job.
+ * Fetches the raw game-data feed. Split behind an interface so the sync is tested with a MockK stub at
+ * this boundary rather than an HTTP-level mock; parsing is [GamedataNormalizer]'s job.
  */
-
 @Component
 class GamedataClientImplementation(
     @Value("\${pokedex.gamedata.base-url}") baseUrl: String,
@@ -24,12 +21,11 @@ class GamedataClientImplementation(
         RestClient
             .builder()
             .baseUrl(baseUrl)
-            // Identify ourselves to the static host (courtesy + easier debugging of any rate-limiting).
             .defaultHeader(HttpHeaders.USER_AGENT, USER_AGENT)
             .requestFactory(
                 SimpleClientHttpRequestFactory().apply {
                     setConnectTimeout(Duration.ofSeconds(5))
-                    // The full feed is large but static; a generous read timeout still bounds a hung fetch.
+                    // Generous: the full feed is large. Still bounds a hung fetch.
                     setReadTimeout(Duration.ofSeconds(30))
                 },
             ).build()

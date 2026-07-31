@@ -4,11 +4,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 /**
- * Plain unit test of the exception → ProblemDetail mapping: HTTP status, human-readable
- * `detail`, and the stable machine-readable `code` the web app maps to messages (the web
- * Zod `Problem` schema carries `code`, T011). Mirrors avec's common test; pokedex diverges
- * by mapping 422 (UnprocessableException) instead of avec's 409, and carries a second 502
- * for the game-data source alongside hive.
+ * Unit test of the exception → ProblemDetail mapping: status, human-readable `detail`, and the stable
+ * machine `code` the SPA keys on. Covers 422 for `UnprocessableException` and both 502s — hive and the
+ * game-data source.
  */
 class ApiExceptionHandlerTest {
     private val handler = ApiExceptionHandler()

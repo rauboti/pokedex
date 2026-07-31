@@ -16,7 +16,7 @@ import java.time.LocalDate
  * The player-owned CaughtPokemon repository (US1): insert/list/find/update/delete round-trips over a
  * real Postgres (Testcontainers), every read scoped by `user_id` (FR-014). Rows reference a seeded
  * species (FK); the V2 CHECK constraints reject out-of-range IVs/CP at the DB layer; the `stale` flag
- * and nullable move-slot FKs round-trip; `listAll` + `markStale` back T018's rescan.
+ * and nullable move-slot FKs round-trip; `findAll` + `markAsStale` back the post-sync rescan.
  */
 class CaughtPokemonRepositoryTest : IntegrationTest() {
     @Autowired private lateinit var caughtPokemonService: CaughtPokemonService
